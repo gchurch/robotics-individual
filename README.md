@@ -1,1 +1,1 @@
-# robotics-idividual
+# robotics-individual
