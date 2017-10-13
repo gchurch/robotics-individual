@@ -21,21 +21,24 @@ n = 0;
 converged =0; %The filter has not converged yet
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
-    botScan = botSim.ultraScan(); %get a scan from the real robot.
-    
+    botScan = botSim.ultraScan()'; %get a scan from the real robot.
     %% Write code for updating your particles scans
     
     %array containing the scans for each particle
-    scans = [];
+    particleScans = [];
     for i = 1:num
-        scans = [scans; particles(i).ultraScan()'];
+        particleScans = [particleScans; particles(i).ultraScan()'];
     end
-    for i = 1:num
-        disp(scans(i,:));
-    end
-    
     
     %% Write code for scoring your particles    
+    
+    %The standard deviation depends on the precision of the sensor
+    sigma = 3;
+    probabilities = [];
+    for i = 1:num
+         probabilities = [probabilities; normpdf(particleScans(i,:), botScan, sigma)];
+    end
+    disp(probabilities);
     
     
     %% Write code for resampling your particles
