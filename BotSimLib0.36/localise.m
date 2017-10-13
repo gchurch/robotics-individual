@@ -16,7 +16,7 @@ for i = 1:num
 end
 
 %% Localisation code
-maxNumOfIterations = 30;
+maxNumOfIterations = 1;
 n = 0;
 converged =0; %The filter has not converged yet
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
@@ -24,7 +24,9 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     botScan = botSim.ultraScan(); %get a scan from the real robot.
     
     %% Write code for updating your particles scans
-   
+    for i = 1:num
+        disp(particles(i).ultraScan());
+    end
     
     %% Write code for scoring your particles    
     
