@@ -24,9 +24,16 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     botScan = botSim.ultraScan(); %get a scan from the real robot.
     
     %% Write code for updating your particles scans
+    
+    %array containing the scans for each particle
+    scans = [];
     for i = 1:num
-        disp(particles(i).ultraScan());
+        scans = [scans; particles(i).ultraScan()'];
     end
+    for i = 1:num
+        disp(scans(i,:));
+    end
+    
     
     %% Write code for scoring your particles    
     
