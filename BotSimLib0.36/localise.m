@@ -33,13 +33,18 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code for scoring your particles    
     
     %The standard deviation depends on the precision of the sensor
-    sigma = 3;
+    sigma = 1;
     probabilities = [];
     for i = 1:num
-         probabilities = [probabilities; normpdf(particleScans(i,:), botScan, sigma)];
+         probabilities = [probabilities; norm(normpdf(particleScans(i,:), botScan, sigma))];
     end
-    disp(probabilities);
-    
+    [val, idx] = max(probabilities);
+    disp("max probability: " + val);
+    disp("index: " + idx);
+    disp("bot scan: ");
+    disp(botScan);
+    disp("best particle scan: ");
+    disp(particleScans(idx,:));
     
     %% Write code for resampling your particles
     
