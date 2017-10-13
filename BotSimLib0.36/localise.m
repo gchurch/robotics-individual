@@ -36,10 +36,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     sigma = 1;
     probabilities = [];
     for i = 1:num
-         probabilities = [probabilities; norm(normpdf(particleScans(i,:), botScan, sigma))];
+        highest = -1;
+        for j = 0:length(particleScans(i,:))-1
+            shifted = circshift(particleScans(i,:),j);
+            probs = normpdf(shifted, botScan, sigma);
+            prob = norm(probs);
+            if prob > highest
+                highest = prob;
+            end
+        end
+        probabilities = [probabilities; highest];
     end
     [val, idx] = max(probabilities);
-    disp("max probability: " + val);
+    disp("highest probability: " + val);
     disp("index: " + idx);
     disp("bot scan: ");
     disp(botScan);
