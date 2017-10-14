@@ -8,7 +8,7 @@ modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
 %select the number of scan samples taking for the robot and particles
-scanSamples = 20;
+scanSamples = 6;
 botSim.setScanConfig(botSim.generateScanConfig(scanSamples));
 
 %generate some random particles inside the map
@@ -58,13 +58,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
         probabilities = [probabilities; highest];
     end
-    [val, idx] = max(probabilities);
-    disp("highest probability: " + val);
-    disp("index: " + idx);
-    disp("bot scan: ");
-    disp(botScan);
-    disp("best particle scan: ");
-    disp(particleScans(idx,:));
+    
+    %normalizing probabilities
+    weights = [];
+    probabilitiesSum = sum(probabilities);
+    for i = 1:num
+        weight = probabilities(i) / probabilitiesSum;
+        weights = [weights; weight];
+    end
+ 
+    %getting the particle with the best weight
+    [val, idx] = max(weights);
+    disp("highest weight: ");
+    disp(val);
     
     %% Write code for resampling your particles
     
