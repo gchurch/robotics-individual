@@ -7,12 +7,17 @@ function [botSim] = localise(botSim,map,target)
 modifiedMap = map; %you need to do this modification yourself
 botSim.setMap(modifiedMap);
 
+%select the number of scan samples taking for the robot and particles
+scanSamples = 20;
+botSim.setScanConfig(botSim.generateScanConfig(scanSamples));
+
 %generate some random particles inside the map
 num =300; % number of particles
 particles(num,1) = BotSim; %how to set up a vector of objects
 for i = 1:num
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
+    particles(i).setScanConfig(botSim.generateScanConfig(scanSamples));
 end
 
 %% Localisation code
@@ -34,13 +39,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %The standard deviation depends on the precision of the sensor
     sigma = 1;
+    %the probabilities of each particleScan
     probabilities = [];
+    %iterating through all of the particleScans
     for i = 1:num
         highest = -1;
-        for j = 0:length(particleScans(i,:))-1
-            shifted = circshift(particleScans(i,:),j);
+        particleScan = particleScans(i,:);
+        samples = length(particleScan);
+        %iterate through each cyclic shift of the scan
+        for j = 0:samples-1
+            shifted = circshift(particleScan,j);
             probs = normpdf(shifted, botScan, sigma);
-            prob = norm(probs);
+            prob = prod(probs);
+            %get the highest probability
             if prob > highest
                 highest = prob;
             end
@@ -84,6 +95,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
+        particles(idx).drawBot(30,'b');
         drawnow;
     end
 end
