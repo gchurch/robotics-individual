@@ -9,6 +9,7 @@ scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
 maxNumOfIterations = 1;
+sensorSigma = 1;
 
 %you can modify the map to take account of your robots configuration space
 modifiedMap = map; %you need to do this modification yourself
@@ -46,8 +47,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for scoring your particles    
     
-    %The standard deviation of the normal distribution depends on the precision of the sensor
-    sigma = 1;
     %the probabilities of each particleScan
     probabilities = [];
     %the number of cyclic shifts that give the best probability
@@ -61,7 +60,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %iterate through each cyclic shift of the scan
         for j = 0:samples-1
             shifted = circshift(particleScan,j);
-            probs = normpdf(shifted, botScan, sigma);
+            probs = normpdf(shifted, botScan, sensorSigma);
             prob = prod(probs);
             %get the highest probability
             if prob > highest
@@ -81,16 +80,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         weights = [weights; weight];
     end
 
+    %value and index of the best weighted particle
     [val,idx] = max(weights);
     
-    %Adjusting the angle of the particle so that it is hopefully facing the
-    %same way as the actual bot
-    newAng = particles(idx).getBotAng() - shifts(idx) * (2 * pi) / scanSamples;
-    newAng = mod(newAng, 2 * pi);
-    particles(idx).setBotAng(newAng);
-    
     %% Write code for resampling your particles
-    %{
+    
     %calculating the cumulative distribution of the weights
     cumulative = [weights(1)];
     for i=2:numOfParticles
@@ -109,6 +103,18 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
     end
     
+    %Adjusting the angle of the good particles so that they are hopefully facing the same way as the actual bot
+    disp("best particle is number " + idx);
+    for i = 1:numOfParticles
+        if particleResamples(i) > 0
+            disp("particle " + i + " angle adjusted");
+            newAng = particles(i).getBotAng() - shifts(i) * (2 * pi) / scanSamples;
+            newAng = mod(newAng, 2 * pi);
+            particles(i).setBotAng(newAng);
+        end
+    end
+    
+    %{
     %respawn particles around the particles with the best weights
     particlesUsed = 0;
     for i = 1:numOfParticles
@@ -141,7 +147,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     disp("Resampling " + numberOfRandomRespawns + " particles at randomised locations");
     
     disp("Total particles resampled: " + particlesUsed);
-    %}
     
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
@@ -153,6 +158,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         particles(i).turn(turn); %turn the particle in the same way as the real robot
         particles(i).move(move); %move the particle in the same way as the real robot
     end
+    %}
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
