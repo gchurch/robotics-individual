@@ -69,11 +69,42 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
  
     %getting the particle with the best weight
     [val, idx] = max(weights);
-    disp("highest weight: ");
-    disp(val);
-    
+
     %% Write code for resampling your particles
+    cumulative = [weights(1)];
+    for i=2:num
+        cumulative = [cumulative; cumulative(i-1) + weights(i)];
+    end
     
+    %the number of new particles to be spawned by each current particle
+    nums = zeros([num,1]);
+    for i=1:num
+        random = rand();
+        for j=1:num
+            if random < cumulative(j)
+                nums(j) = nums(j) + 1;
+                break;
+            end
+        end
+    end
+    
+    %spawn the particles in their new locations
+    used = 1;
+    for i = 1:num
+        if nums(i) > 0
+            %get the pos of the parcticles to resample around
+            particlePos = particles(i).getBotPos();
+            particlePos = particlePos(1,:);
+            disp("Resampling " + nums(i) + " particles around: ");
+            disp(particlePos);
+            %set the particles' new pose with some error (need to set ang
+            %aswell at some point
+            for j=used:used + nums(i) - 1
+                used = used + 1;
+                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
+            end
+        end
+    end
     
     %% Write code to check for convergence   
 	
