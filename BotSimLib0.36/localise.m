@@ -46,7 +46,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %% Write code for scoring your particles    
     
-    %The standard deviation depends on the precision of the sensor
+    %The standard deviation of the normal distribution depends on the precision of the sensor
     sigma = 1;
     %the probabilities of each particleScan
     probabilities = [];
@@ -75,40 +75,39 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         weight = probabilities(i) / probabilitiesSum;
         weights = [weights; weight];
     end
- 
-    %getting the particle with the best weight
-    [val, idx] = max(weights);
 
     %% Write code for resampling your particles
+    
+    %calculating the cumulative distribution of the weights
     cumulative = [weights(1)];
     for i=2:numOfParticles
         cumulative = [cumulative; cumulative(i-1) + weights(i)];
     end
     
-    %the number of new particles to be spawned by each current particle
-    nums = zeros([numOfParticles,1]);
+    %the number of particles to be respawned around current particles
+    particleResamples = zeros([numOfParticles,1]);
     for i=1:(numOfParticles-numberOfRandomRespawns)
         random = rand();
         for j=1:numOfParticles
             if random < cumulative(j)
-                nums(j) = nums(j) + 1;
+                particleResamples(j) = particleResamples(j) + 1;
                 break;
             end
         end
     end
     
-    %spawn most particles around the particles with the best weights
+    %respawn particles around the particles with the best weights
     particlesUsed = 0;
     for i = 1:numOfParticles
-        if nums(i) > 0
+        if particleResamples(i) > 0
             %get the pos of the parcticles to resample around
             particlePos = particles(i).getBotPos();
             particlePos = particlePos(1,:);
-            disp("Resampling " + nums(i) + " particles around: ");
+            disp("Resampling " + particleResamples(i) + " particles around: ");
             disp(particlePos);
             %set the particles' new pose with some error (need to set ang
             %aswell at some point
-            for j=(particlesUsed+1):(particlesUsed+nums(i))
+            for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
                 particlesUsed = particlesUsed + 1;
                 particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
             end
@@ -119,6 +118,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 	
 
     %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)
+    
     %Respawn the remaining particles in randomised locations
     for i=(particlesUsed+1):numOfParticles
         particles(i).randomPose(0);
@@ -139,8 +139,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         particles(i).turn(turn); %turn the particle in the same way as the real robot
         particles(i).move(move); %move the particle in the same way as the real robot
     end
-
-    disp("");
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
