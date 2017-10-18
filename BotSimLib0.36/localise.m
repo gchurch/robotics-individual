@@ -5,7 +5,7 @@ function [botSim] = localise(botSim,map,target)
 %% setup code
 
 %variables
-scanSamples = 6;
+scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
 maxNumOfIterations = 1;
@@ -50,9 +50,12 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     sigma = 1;
     %the probabilities of each particleScan
     probabilities = [];
+    %the number of cyclic shifts that give the best probability
+    shifts = [];
     %iterating through all of the particleScans
     for i = 1:numOfParticles
         highest = -1;
+        bestShift = 0;
         particleScan = particleScans(i,:);
         samples = length(particleScan);
         %iterate through each cyclic shift of the scan
@@ -63,10 +66,14 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             %get the highest probability
             if prob > highest
                 highest = prob;
+                bestShift = j;
             end
         end
         probabilities = [probabilities; highest];
+        shifts = [shifts; bestShift];
     end
+    
+    disp(shifts);
     
     %normalizing probabilities
     weights = [];
@@ -76,8 +83,35 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         weights = [weights; weight];
     end
 
-    %% Write code for resampling your particles
+    [val,idx] = max(weights);
     
+    disp("actual:");
+    disp(botSim.getBotAng(0));
+    disp(botScan);
+    
+    disp("predicted:");
+    disp(particleScans(idx,:));
+    disp(particles(idx).getBotAng());
+    disp(shifts(idx));
+    disp(circshift(particleScans(idx,:), shifts(idx)));
+    newAng = particles(idx).getBotAng() - shifts(idx) * (2 * pi) / scanSamples;
+    disp(newAng);
+    newAng = mod(newAng, 2 * pi);
+    disp(newAng);
+    particles(idx).setBotAng(newAng);
+    
+    %{
+    disp("predicted:");
+    currentAng = particles(idx).getBotAng();
+    disp(currentAng);
+    disp(shifts(idx));
+    newAng = currentAng + shifts(idx) * (2 * pi) / scanSamples;
+    disp(newAng);
+    particles(idx).setBotAng(newAng);
+    %}
+    
+    %% Write code for resampling your particles
+    %{
     %calculating the cumulative distribution of the weights
     cumulative = [weights(1)];
     for i=2:numOfParticles
@@ -113,7 +147,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             end
         end
     end
-    
+    %
     %% Write code to check for convergence   
 	
 
@@ -128,6 +162,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     disp("Resampling " + numberOfRandomRespawns + " particles at randomised locations");
     
     disp("Total particles resampled: " + particlesUsed);
+    %}
     
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
@@ -149,6 +184,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:numOfParticles
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
+        particles(idx).drawBot(30,'r');
         drawnow;
     end
 end
