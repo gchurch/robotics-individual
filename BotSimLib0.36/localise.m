@@ -20,6 +20,11 @@ for i = 1:num
     particles(i).setScanConfig(botSim.generateScanConfig(scanSamples));
 end
 
+%How many particles will be respawned at a random location after each
+%iteration
+randomRespawns = 0.2;
+noRandomRespawns = randomRespawns * num;
+
 %% Localisation code
 maxNumOfIterations = 1;
 n = 0;
@@ -78,7 +83,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %the number of new particles to be spawned by each current particle
     nums = zeros([num,1]);
-    for i=1:num
+    for i=1:(num-noRandomRespawns)
         random = rand();
         for j=1:num
             if random < cumulative(j)
@@ -88,8 +93,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         end
     end
     
-    %spawn the particles in their new locations
-    used = 1;
+    %spawn most particles around the particles with the best weights
+    used = 0;
     for i = 1:num
         if nums(i) > 0
             %get the pos of the parcticles to resample around
@@ -99,7 +104,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             disp(particlePos);
             %set the particles' new pose with some error (need to set ang
             %aswell at some point
-            for j=used:used + nums(i) - 1
+            for j=(used+1):(used+nums(i))
                 used = used + 1;
                 particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
             end
@@ -109,8 +114,13 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code to check for convergence   
 	
 
-    %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)	
+    %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)
+    %Respawn the remaining particles in randomised locations
+    for i=(used+1):num
+        particles(i).randomPose(0);
+    end
     
+    disp("Resampling " + noRandomRespawns + " particles at randomised locations");
     
     %% Write code to decide how to move next
     % here they just turn in cicles as an example
@@ -132,7 +142,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         for i =1:num
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
-        particles(idx).drawBot(30,'b');
         drawnow;
     end
 end
