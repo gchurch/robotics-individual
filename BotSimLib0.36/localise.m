@@ -73,8 +73,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         shifts = [shifts; bestShift];
     end
     
-    disp(shifts);
-    
     %normalizing probabilities
     weights = [];
     probabilitiesSum = sum(probabilities);
@@ -85,30 +83,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     [val,idx] = max(weights);
     
-    disp("actual:");
-    disp(botSim.getBotAng(0));
-    disp(botScan);
-    
-    disp("predicted:");
-    disp(particleScans(idx,:));
-    disp(particles(idx).getBotAng());
-    disp(shifts(idx));
-    disp(circshift(particleScans(idx,:), shifts(idx)));
+    %Adjusting the angle of the particle so that it is hopefully facing the
+    %same way as the actual bot
     newAng = particles(idx).getBotAng() - shifts(idx) * (2 * pi) / scanSamples;
-    disp(newAng);
     newAng = mod(newAng, 2 * pi);
-    disp(newAng);
     particles(idx).setBotAng(newAng);
-    
-    %{
-    disp("predicted:");
-    currentAng = particles(idx).getBotAng();
-    disp(currentAng);
-    disp(shifts(idx));
-    newAng = currentAng + shifts(idx) * (2 * pi) / scanSamples;
-    disp(newAng);
-    particles(idx).setBotAng(newAng);
-    %}
     
     %% Write code for resampling your particles
     %{
@@ -178,6 +157,17 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
     if botSim.debug()
+        
+        %print actual bots pose
+        disp("Actual bot: ");
+        disp(botSim.getBotPos(0));
+        disp(botSim.getBotAng(0));
+        
+        %print the best particle pose
+        disp("Predicted bot: ");
+        disp(particles(idx).getBotPos());
+        disp(particles(idx).getBotAng());
+        
         hold off; %the drawMap() function will clear the drawing when hold is off
         botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
         botSim.drawBot(30,'g'); %draw robot with line length 30 and green
