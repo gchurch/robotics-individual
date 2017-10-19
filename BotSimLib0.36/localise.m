@@ -8,7 +8,7 @@ function [botSim] = localise(botSim,map,target)
 scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
-maxNumOfIterations = 1;
+maxNumOfIterations = 10;
 sensorSigma = 1;
 
 %you can modify the map to take account of your robots configuration space
@@ -104,12 +104,12 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
-        actualAng = botSim.getBotAng(0);
+        actualAng = mod(botSim.getBotAng(0),2*pi);
         particlePos = particles(idx).getBotPos();
-        particleAng = particles(idx).getBotAng();
-        xError = (particlePos(1) - actualPos(1));
-        yError = (particlePos(2) - actualPos(2));
-        angError = (particleAng - actualAng);
+        particleAng = mod(particles(idx).getBotAng(),2*pi);
+        xError = abs(particlePos(1) - actualPos(1));
+        yError = abs(particlePos(2) - actualPos(2));
+        angError = abs(particleAng - actualAng);
         
         %print actual and predicted position
         fprintf("Actual position:\t(%.3f, %.3f)\n", actualPos(1), actualPos(2));
