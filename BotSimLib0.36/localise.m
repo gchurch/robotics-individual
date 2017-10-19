@@ -35,8 +35,20 @@ n = 0;
 converged =0; %The filter has not converged yet
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
-    botScan = botSim.ultraScan()'; %get a scan from the real robot.
+    
+    %% Write code to decide how to move next
+    % here they just turn in cicles as an example
+    turn = 0.5;
+    move = 2;
+    botSim.turn(turn); %turn the real robot.  
+    botSim.move(move); %move the real robot. These movements are recorded for marking 
+    for i =1:numOfParticles %for all the particles. 
+        particles(i).turn(turn); %turn the particle in the same way as the real robot
+        particles(i).move(move); %move the particle in the same way as the real robot
+    end
+    
     %% Write code for updating your particles scans
+    botScan = botSim.ultraScan()'; %get a scan from the real robot.
     
     %array containing the scans for each particle
     particleScans = [];
@@ -48,8 +60,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     
     %the probabilities of each particleScan
     probabilities = [];
-    %the number of cyclic shifts that give the best probability
-    shifts = [];
     %iterating through all of the particleScans
     for i = 1:numOfParticles
         highest = -1;
@@ -68,7 +78,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             end
         end
         probabilities = [probabilities; highest];
-        shifts = [shifts; bestShift];
+        %rotate the particles so they face the best direction
+        newAng = particles(i).getBotAng() - bestShift * (2 * pi) / scanSamples;
+        newAng = mod(newAng, 2 * pi);
+        particles(i).setBotAng(newAng);
     end
     
     %normalizing probabilities
@@ -82,80 +95,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %value and index of the best weighted particle
     [val,idx] = max(weights);
     
-    %% Write code for resampling your particles
-    
-    %calculating the cumulative distribution of the weights
-    cumulative = [weights(1)];
-    for i=2:numOfParticles
-        cumulative = [cumulative; cumulative(i-1) + weights(i)];
-    end
-    
-    %the number of particles to be respawned around current particles
-    particleResamples = zeros([numOfParticles,1]);
-    for i=1:(numOfParticles-numberOfRandomRespawns)
-        random = rand();
-        for j=1:numOfParticles
-            if random < cumulative(j)
-                particleResamples(j) = particleResamples(j) + 1;
-                break;
-            end
-        end
-    end
-    
-    %Adjusting the angle of the good particles so that they are hopefully facing the same way as the actual bot
-    for i = 1:numOfParticles
-        if particleResamples(i) > 0
-            newAng = particles(i).getBotAng() - shifts(i) * (2 * pi) / scanSamples;
-            newAng = mod(newAng, 2 * pi);
-            particles(i).setBotAng(newAng);
-        end
-    end
-    
-    %{
-    %respawn particles around the particles with the best weights
-    particlesUsed = 0;
-    for i = 1:numOfParticles
-        if particleResamples(i) > 0
-            %get the pos of the parcticles to resample around
-            particlePos = particles(i).getBotPos();
-            particlePos = particlePos(1,:);
-            disp("Resampling " + particleResamples(i) + " particles around: ");
-            disp(particlePos);
-            %set the particles' new pose with some error (need to set ang
-            %aswell at some point
-            for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
-                particlesUsed = particlesUsed + 1;
-                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
-            end
-        end
-    end
-    %
-    %% Write code to check for convergence   
-	
-
-    %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)
-    
-    %Respawn the remaining particles in randomised locations
-    for i=(particlesUsed+1):numOfParticles
-        particles(i).randomPose(0);
-        particlesUsed = particlesUsed + 1;
-    end
-    
-    disp("Resampling " + numberOfRandomRespawns + " particles at randomised locations");
-    
-    disp("Total particles resampled: " + particlesUsed);
-    
-    %% Write code to decide how to move next
-    % here they just turn in cicles as an example
-    turn = 0.5;
-    move = 2;
-    botSim.turn(turn); %turn the real robot.  
-    botSim.move(move); %move the real robot. These movements are recorded for marking 
-    for i =1:numOfParticles %for all the particles. 
-        particles(i).turn(turn); %turn the particle in the same way as the real robot
-        particles(i).move(move); %move the particle in the same way as the real robot
-    end
-    %}
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
@@ -193,5 +132,53 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         particles(idx).drawBot(30,'r');
         drawnow;
     end
+    
+    %% Write code to check for convergence   
+	
+
+    %% Write code for resampling your particles
+    
+    %calculating the cumulative distribution of the weights
+    cumulative = [weights(1)];
+    for i=2:numOfParticles
+        cumulative = [cumulative; cumulative(i-1) + weights(i)];
+    end
+    
+    %the number of particles to be respawned around current particles
+    particleResamples = zeros([numOfParticles,1]);
+    for i=1:(numOfParticles-numberOfRandomRespawns)
+        random = rand();
+        for j=1:numOfParticles
+            if random < cumulative(j)
+                particleResamples(j) = particleResamples(j) + 1;
+                break;
+            end
+        end
+    end
+    
+    %respawn particles around the particles with the best weights
+    particlesUsed = 0;
+    for i = 1:numOfParticles
+        if particleResamples(i) > 0
+            %get the pos of the parcticles to resample around
+            particlePos = particles(i).getBotPos();
+            particlePos = particlePos(1,:);
+            %set the particles' new pose with some error (need to set ang
+            %aswell at some point
+            for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
+                particlesUsed = particlesUsed + 1;
+                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
+            end
+        end
+    end
+    
+    %% Write code to take a percentage of your particles and respawn in randomised locations (important for robustness)
+    
+    %Respawn the remaining particles in randomised locations
+    for i=(particlesUsed+1):numOfParticles
+        particles(i).randomPose(0);
+        particlesUsed = particlesUsed + 1;
+    end
+   
 end
 end
