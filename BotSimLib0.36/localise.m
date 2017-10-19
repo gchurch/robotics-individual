@@ -35,7 +35,6 @@ n = 0;
 converged =0; %The filter has not converged yet
 while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
-    disp("Iteration: " + n);
     botScan = botSim.ultraScan()'; %get a scan from the real robot.
     %% Write code for updating your particles scans
     
@@ -104,10 +103,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
     
     %Adjusting the angle of the good particles so that they are hopefully facing the same way as the actual bot
-    disp("best particle is number " + idx);
     for i = 1:numOfParticles
         if particleResamples(i) > 0
-            disp("particle " + i + " angle adjusted");
             newAng = particles(i).getBotAng() - shifts(i) * (2 * pi) / scanSamples;
             newAng = mod(newAng, 2 * pi);
             particles(i).setBotAng(newAng);
@@ -164,15 +161,28 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %only draw if you are in debug mode or it will be slow during marking
     if botSim.debug()
         
-        %print actual bots pose
-        disp("Actual bot: ");
-        disp(botSim.getBotPos(0));
-        disp(botSim.getBotAng(0));
+        fprintf("Iteration %d\n", n);
         
-        %print the best particle pose
-        disp("Predicted bot: ");
-        disp(particles(idx).getBotPos());
-        disp(particles(idx).getBotAng());
+        %getting the actual and predicted bot pose
+        actualPos = botSim.getBotPos(0);
+        actualAng = botSim.getBotAng(0);
+        particlePos = particles(idx).getBotPos();
+        particleAng = particles(idx).getBotAng();
+        xError = (particlePos(1) - actualPos(1));
+        yError = (particlePos(2) - actualPos(2));
+        angError = (particleAng - actualAng);
+        
+        %print actual and predicted position
+        fprintf("Actual position:\t(%.3f, %.3f)\n", actualPos(1), actualPos(2));
+        fprintf("Predicted position:\t(%.3f, %.3f)\n", particlePos(1), particlePos(2));
+        fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
+        fprintf("\n");
+        
+        %print actual and predicted angle
+        fprintf("Actual angle:\t\t%.3f\n", actualAng);
+        fprintf("Predicted angle:\t%.3f\n", particleAng);
+        fprintf("Angle error:\t\t%.3f\n", angError);
+        fprintf("\n\n");
         
         hold off; %the drawMap() function will clear the drawing when hold is off
         botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
