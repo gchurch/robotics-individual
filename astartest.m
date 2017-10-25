@@ -1,19 +1,58 @@
-xstart = 0;
-xend = 5;
-ystart = 0;
-yend = 5;
-xnum = 100;
-ynum = 100;
+%% define map
+map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
+inpolygonMapformatX = cat(1,map(:,1), map(1,1));
+inpolygonMapformatY = cat(1,map(:,2), map(1,2));
+
+%% draw map
+plot(map(:,1),map(:,2),'lineWidth',2,'Color','r'); % draws arena
+axis equal; %keeps the x and y scale the same
+drawnow;
+
+%% discretization
+
+%how many steps in the x and y axis
+xnum = 20;
+ynum = 20;
+
+dim = size(map);
+
+xstart = map(1,1);
+xend = map(1,1);
+ystart = map(1,2);
+yend = map(1,2);
+
+for i=1:dim(1)
+    if map(i,1) < xstart
+        xstart = map(i,1);
+    end
+    if map(i,1) > xend
+        xend = map(i,1);
+    end
+    if map(i,2) < ystart
+        ystart = map(i,2);
+    end
+    if map(i,2) > yend
+        yend = map(i,2);
+    end
+end
+
+fprintf("TL: (%f,%f), BR: (%f,%f)\n", xstart, ystart, xend, yend);
+xstep = (xend - xstart) / xnum;
+ystep = (yend - ystart) / ynum;
+fprintf("x step: %f\n", xstep);
+fprintf("y step: %f\n", ystep);
 
 coords = [];
 inmap = zeros(xnum,ynum);
+%getting map coordinates and determining if coordinate in inside the map
 for i=1:xnum
     for j=1:ynum
-        x = xstart + ((i-1)/xnum) * (xend - xstart);
-        y = ystart + ((j-1)/ynum) * (yend - ystart);
-        coords = [coords; [x,y]];
-        r = rand;
-        if r > 0.5
+        % we subtract 0.5 so that we reside in the middle of the squares
+        x = xstart + (i-0.5) * xstep;
+        y = ystart + (j-0.5) * ystep;
+        pos = [x,y];
+        coords = [coords; pos];
+        if inpolygon(pos(1),pos(2),inpolygonMapformatX,inpolygonMapformatY) == 1
             inmap(i,j) = 1;
         else
             inmap(i,j) = 0;
@@ -21,5 +60,5 @@ for i=1:xnum
     end
 end
 
-disp(coords);
+%map is rotated clockwise
 disp(inmap);
