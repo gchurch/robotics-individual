@@ -3,14 +3,6 @@ map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
 inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
-%% create bot and draw map
-botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
-target = [100,100];
-botSim.drawMap();
-botSim.drawBot(10,'g');
-plot(target(1),target(2),'*');
-drawnow;
-
 %% discretization
 
 %how many steps in the x and y axis
@@ -64,4 +56,18 @@ for i=1:xnum
 end
 
 %map is rotated clockwise
+disp(coords);
 disp(inmap);
+
+%% create bot and draw map
+botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
+%set the bots position to the first coordinate
+botSim.setBotPos(coords(1,:));
+%set the target position to the last coordinate
+[a,b] = size(coords);
+target = coords(a,:);
+%draw map
+botSim.drawMap();
+botSim.drawBot(10,'g');
+plot(target(1),target(2),'*');
+drawnow;
