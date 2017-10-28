@@ -3,9 +3,12 @@ map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
 inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
-%% draw map
-plot(map(:,1),map(:,2),'lineWidth',2,'Color','r'); % draws arena
-axis equal; %keeps the x and y scale the same
+%% create bot and draw map
+botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
+target = [100,100];
+botSim.drawMap();
+botSim.drawBot(10,'g');
+plot(target(1),target(2),'*');
 drawnow;
 
 %% discretization
