@@ -32,13 +32,12 @@ for i=1:dim(1)
     end
 end
 
-%{
-fprintf("TL: (%f,%f), BR: (%f,%f)\n", xstart, ystart, xend, yend);
 xstep = (xend - xstart) / xnum;
 ystep = (yend - ystart) / ynum;
+
+fprintf("TL: (%f,%f), BR: (%f,%f)\n", xstart, ystart, xend, yend);
 fprintf("x step: %f\n", xstep);
 fprintf("y step: %f\n", ystep);
-%}
 
 nodes(xnum,ynum) = Node;
 inmap = zeros(xnum,ynum);
@@ -118,7 +117,6 @@ openList = [];
 %nodes conatain the index followed by the g and f cost
 currentNode = [startNode 0 0];
 closedList = [closedList; currentNode];
-disp(currentNode);
 
 %iterate
 its = 0;
@@ -135,20 +133,21 @@ while ~(currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2))
     %not sorting by column 3 properly
     openList = sortrows(openList,[4,3],{'ascend','descend'});
 
-    disp("open list:");
-    disp(openList);
+    %disp("open list:");
+    %disp(openList);
     
     % get new current node
     currentNode = openList(1,:);
     openList(1,:) = [];
     closedList = [closedList; currentNode];
 
-    disp("closed list:");
-    disp(closedList);
+    %disp("closed list:");
+    %disp(closedList);
 end
 
 fprintf("number of iterations to find route: %d\n", its);
 
+%{
 %print inmap info
 for i=xnum:-1:1
     for j=1:ynum
@@ -156,6 +155,7 @@ for i=xnum:-1:1
     end
     fprintf("\n");
 end
+%}
 
 % Return new nodes along with their corresponding cost
 function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode)
