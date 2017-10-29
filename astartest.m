@@ -8,15 +8,14 @@ inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 %how many steps in the x and y axis
 xnum = 20;
 ynum = 20;
-fprintf("grid size: %d x %d\n", xnum, ynum);
 
-dim = size(map);
-
+%the min and max axis values
 xstart = map(1,1);
 xend = map(1,1);
 ystart = map(1,2);
 yend = map(1,2);
 
+dim = size(map);
 for i=1:dim(1)
     if map(i,1) < xstart
         xstart = map(i,1);
@@ -32,15 +31,12 @@ for i=1:dim(1)
     end
 end
 
+%the real distance between each node
 xstep = (xend - xstart) / xnum;
 ystep = (yend - ystart) / ynum;
 
-fprintf("TL: (%f,%f), BR: (%f,%f)\n", xstart, ystart, xend, yend);
-fprintf("x step: %f\n", xstep);
-fprintf("y step: %f\n", ystep);
-
+%array of objects holding information for each node
 nodes(xnum,ynum) = Node;
-inmap = zeros(xnum,ynum);
 %getting map coordinates and determining if coordinate is inside the map
 for i=1:xnum
     for j=1:ynum
@@ -62,25 +58,6 @@ for i=1:xnum
     end
 end
 
-%% displaying grip info
-%{
-%printing the coordinates
-for i=1:xnum
-    for j=1:ynum
-        pos = nodes(i,j).pos;
-        disp(pos);
-    end
-end
-
-%print inmap info
-for i=1:xnum
-    for j=1:ynum
-        fprintf("%d ", nodes(i,j).inmap);
-    end
-    fprintf("\n");
-end
-%}
-
 %% create bot and draw map
 botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
 %set the bots position to the first coordinate
@@ -93,60 +70,6 @@ botSim.drawBot(10,'g');
 plot(target(1),target(2),'*');
 drawnow;
 
-%% algorithm
-startPos = botSim.getBotPos();
-fprintf("start pos: (%f,%f)\n", startPos(1), startPos(2));
-fprintf("target pos: (%f,%f)\n", target(1), target(2));
-
-%get the start node
-startNode = [1,1];
-targetNode = [xnum,ynum];
-fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
-fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
-
-%calculate all node heuristic values
-for i=1:xnum
-    for j=1:ynum
-        nodes(i,j).calculateHeuristic(targetNode);
-    end
-end
-
-closedList = [];
-openList = [];
-
-%nodes conatain the index followed by the g and f cost
-currentNode = [startNode 0 0];
-closedList = [closedList; currentNode];
-
-%iterate
-its = 0;
-while ~(currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2))
-    its = its + 1;
-    % get new nodes
-    n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
-    ndim = size(n);
-
-    % add the nodes to the open list
-    for i=1:ndim(1)
-        openList = addToOpenList(openList, n(i,:));
-    end
-    %not sorting by column 3 properly
-    openList = sortrows(openList,[4,3],{'ascend','descend'});
-
-    %disp("open list:");
-    %disp(openList);
-    
-    % get new current node
-    currentNode = openList(1,:);
-    openList(1,:) = [];
-    closedList = [closedList; currentNode];
-
-    %disp("closed list:");
-    %disp(closedList);
-end
-
-fprintf("number of iterations to find route: %d\n", its);
-
 %{
 %print inmap info
 for i=xnum:-1:1
@@ -156,6 +79,56 @@ for i=xnum:-1:1
     fprintf("\n");
 end
 %}
+
+%% algorithm
+startPos = botSim.getBotPos();
+startNode = [1,1];
+targetNode = [xnum,ynum];
+fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
+fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
+
+astarSearch(xnum, ynum, nodes, startNode, targetNode);
+
+%Performs A* search on the graph nodes from startNode to targetNode
+function astarSearch(xnum, ynum, nodes, startNode, targetNode)
+
+    %calculate all node heuristic values
+    for i=1:xnum
+        for j=1:ynum
+            nodes(i,j).calculateHeuristic(targetNode);
+        end
+    end
+    
+    closedList = [];
+    openList = [];
+
+    %nodes conatain the index followed by the g and f cost
+    currentNode = [startNode 0 0];
+    closedList = [closedList; currentNode];
+
+    %iterate
+    its = 0;
+    while ~(currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2))
+        its = its + 1;
+        % get new nodes
+        n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
+        ndim = size(n);
+
+        % add the nodes to the open list
+        for i=1:ndim(1)
+            openList = addToOpenList(openList, n(i,:));
+        end
+        %not sorting by column 3 properly
+        openList = sortrows(openList,[4,3],{'ascend','descend'});
+    
+        % get new current node
+        currentNode = openList(1,:);
+        openList(1,:) = [];
+        closedList = [closedList; currentNode];
+    end
+
+    fprintf("number of iterations to find route: %d\n", its);
+end
 
 % Return new nodes along with their corresponding cost
 function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode)
