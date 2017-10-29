@@ -115,36 +115,58 @@ end
 closedList = [];
 openList = [];
 
-closedList = [closedList; startNode 0];
-currentNode = closedList(1,:);
-n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
-openList = [openList; n];
-openList = sortrows(openList,3);
-currentNode = openList(1,:);
+%nodes conatain the index followed by the f cost
+currentNode = [startNode 0];
 closedList = [closedList; currentNode];
-%remove the first row
-openList(1,:) = [];
-disp(openList);
-openList = addToOpenList(openList, [1,2,19]);
-disp(openList);
 
+%iterate
+for it=1:3
+    % get new nodes
+    n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
+    ndim = size(n);
 
+    % add the nodes to the open list
+    for i=1:ndim(1)
+        openList = addToOpenList(openList, n(i,:));
+    end
+    openList = sortrows(openList,3);
+
+    % get new current node
+    currentNode = openList(1,:);
+    openList(1,:) = [];
+    closedList = [closedList; [currentNode(1), currentNode(2), nodes(bestNode(1),bestNode(2)).h]];
+
+    disp("closed list:");
+    disp(closedList);
+    disp("open list:");
+    disp(openList);
+end
+
+% Return new nodes along with their corresponding cost
 function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode)
     newNodes = [];
+    %iterate through all neighbouring nodes
     for i=-1:1
         for j=-1:1
             offset = [i,j];
             index = [currentNode(1),currentNode(2)];
+            %the index of the neighbouring node
             newIndex = index + offset;
-            if ~(index(1) == newIndex(1) && index(2) == newIndex(2))
+            %check that the node is not in the closed list
+            if ~(i == 0 && j == 0) && ~inClosedList(closedList, newIndex)
+                %check that the node indexes are in bounds
                 if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) < xnum && newIndex(2) < ynum
+                    %check that the node is in the map
                     if nodes(newIndex(1),newIndex(2)).inmap
+                        %calculate the g cost
                         if sum(abs(offset)) == 2
                             g = currentNode(3) + 1.4;
                         else
                             g = currentNode(3) + 1;
                         end
+                        %f = g + h
                         f = g + nodes(newIndex(1),newIndex(2)).h;
+                        %add node the list of new nodes
                         newEntry = [(index + [i,j]) f];
                         newNodes = [newNodes; newEntry];
                     end
@@ -154,13 +176,28 @@ function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, curren
     end
 end
 
+%function to check is a given node is already in the closed list
+function bool = inClosedList(closedList, node)
+    bool = 0;
+    dims = size(closedList);
+    for i=1:dims(1)
+        row = closedList(i,:);
+        if node(1) == row(1) && node(2) == row(2)
+            bool = 1;
+        end
+    end
+end
+
+%function to return the new open list by adding an entry to the old one
 function newOpenList = addToOpenList(openList, newEntry)
     newOpenList = openList;
     dims = size(newOpenList);
     c = dims(1);
     bool = 0;
+    %check if the new entries indexes are already in the openlist
     for i=1:c
         row = newOpenList(i,:);
+        %if already in the open list update the cost if it is less
         if newEntry(1) == row(1) && newEntry(2) == row(2)
             bool = 1;
             if newEntry(3) < row(3)
@@ -168,6 +205,7 @@ function newOpenList = addToOpenList(openList, newEntry)
             end
         end
     end
+    %if not in the open list then add to the end
     if bool == 0
         newOpenList = [newOpenList; newEntry];
     end
