@@ -69,9 +69,11 @@ botSim.setBotPos(nodes(1,1).pos);
 %set the target position to the last coordinate
 target = [nodes(xnum,ynum).pos];
 %draw map
+clf;
 botSim.drawMap();
 botSim.drawBot(10,'g');
 plot(target(1),target(2),'*');
+hold on;
 drawnow;
 
 %{
@@ -92,7 +94,15 @@ fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
 fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
 
 path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
-disp(path);
+
+%draw the path that the algorithm found
+dims = size(path);
+for i=1:dims(1)
+    row = path(i,:);
+    node = nodes(row(1),row(2));
+    pos = node.pos;
+    plot(pos(1),pos(2),'*');
+end
 
 %% functions
 %Performs A* search on the graph nodes from startNode to targetNode
@@ -137,7 +147,7 @@ function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
     % the path that the algorithm finds
     path = constructPath(closedList);
     
-    fprintf("number of iterations to find route: %d\n", its);
+    fprintf("iterations: %d\n", its);
     
     e = cputime - t;
     fprintf("A* search algorithm time: %f\n", e);
