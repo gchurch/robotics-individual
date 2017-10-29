@@ -116,28 +116,60 @@ closedList = [];
 openList = [];
 
 closedList = [closedList; startNode 0];
-node = closedList(1,:);
+currentNode = closedList(1,:);
+n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
+openList = [openList; n];
+openList = sortrows(openList,3);
+currentNode = openList(1,:);
+closedList = [closedList; currentNode];
+%remove the first row
+openList(1,:) = [];
+disp(openList);
+openList = addToOpenList(openList, [1,2,19]);
+disp(openList);
 
-for i=-1:1
-    for j=-1:1
-        offset = [i,j];
-        index = [node(1),node(2)];
-        newIndex = index + offset;
-        if ~(index(1) == newIndex(1) && index(2) == newIndex(2))
-            if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) < xnum && newIndex(2) < ynum
-                if nodes(newIndex(1),newIndex(2)).inmap
-                    if sum(abs(offset)) == 2
-                        g = node(3) + 1.4;
-                    else
-                        g = node(3) + 1;
+
+function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode)
+    newNodes = [];
+    for i=-1:1
+        for j=-1:1
+            offset = [i,j];
+            index = [currentNode(1),currentNode(2)];
+            newIndex = index + offset;
+            if ~(index(1) == newIndex(1) && index(2) == newIndex(2))
+                if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) < xnum && newIndex(2) < ynum
+                    if nodes(newIndex(1),newIndex(2)).inmap
+                        if sum(abs(offset)) == 2
+                            g = currentNode(3) + 1.4;
+                        else
+                            g = currentNode(3) + 1;
+                        end
+                        f = g + nodes(newIndex(1),newIndex(2)).h;
+                        newEntry = [(index + [i,j]) f];
+                        newNodes = [newNodes; newEntry];
                     end
-                    f = g + nodes(newIndex(1),newIndex(2)).h;
-                    newEntry = [(index + [i,j]) f];
-                    openList = [openList; newEntry];
                 end
             end
         end
     end
 end
 
-disp(openList);
+function newOpenList = addToOpenList(openList, newEntry)
+    newOpenList = openList;
+    dims = size(newOpenList);
+    c = dims(1);
+    bool = 0;
+    for i=1:c
+        row = newOpenList(i,:);
+        if newEntry(1) == row(1) && newEntry(2) == row(2)
+            bool = 1;
+            if newEntry(3) < row(3)
+                newOpenList(i,3) = newEntry(3);
+            end
+        end
+    end
+    if bool == 0
+        newOpenList = [newOpenList; newEntry];
+    end
+end
+
