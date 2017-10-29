@@ -4,6 +4,7 @@ inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
 %% discretization
+t = cputime;
 
 %how many steps in the x and y axis
 xnum = 20;
@@ -58,6 +59,9 @@ for i=1:xnum
     end
 end
 
+e = cputime - t;
+fprintf("discretization time: %f\n", e);
+
 %% create bot and draw map
 botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
 %set the bots position to the first coordinate
@@ -91,6 +95,7 @@ astarSearch(xnum, ynum, nodes, startNode, targetNode);
 
 %Performs A* search on the graph nodes from startNode to targetNode
 function astarSearch(xnum, ynum, nodes, startNode, targetNode)
+    t = cputime;
 
     %calculate all node heuristic values
     for i=1:xnum
@@ -126,8 +131,11 @@ function astarSearch(xnum, ynum, nodes, startNode, targetNode)
         openList(1,:) = [];
         closedList = [closedList; currentNode];
     end
-
+    
     fprintf("number of iterations to find route: %d\n", its);
+    
+    e = cputime - t;
+    fprintf("A* search algorithm time: %f\n", e);
 end
 
 % Return new nodes along with their corresponding cost
