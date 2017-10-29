@@ -1,5 +1,5 @@
 %% define map
-map=[0,0;100,0;100,100;0,100];  %default map
+map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
 inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
@@ -121,7 +121,9 @@ closedList = [closedList; currentNode];
 disp(currentNode);
 
 %iterate
-for its=1:10
+its = 0;
+while ~(currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2))
+    its = its + 1;
     % get new nodes
     n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
     ndim = size(n);
@@ -130,6 +132,7 @@ for its=1:10
     for i=1:ndim(1)
         openList = addToOpenList(openList, n(i,:));
     end
+    %not sorting by column 3 properly
     openList = sortrows(openList,[4,3],{'ascend','descend'});
 
     disp("open list:");
@@ -142,6 +145,16 @@ for its=1:10
 
     disp("closed list:");
     disp(closedList);
+end
+
+fprintf("number of iterations to find route: %d\n", its);
+
+%print inmap info
+for i=xnum:-1:1
+    for j=1:ynum
+        fprintf("%d ", nodes(j,i).inmap);
+    end
+    fprintf("\n");
 end
 
 % Return new nodes along with their corresponding cost
@@ -157,14 +170,14 @@ function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, curren
             %check that the node is not in the closed list
             if ~(i == 0 && j == 0) && ~inClosedList(closedList, newIndex)
                 %check that the node indexes are in bounds
-                if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) < xnum && newIndex(2) < ynum
+                if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) <= xnum && newIndex(2) <= ynum
                     %check that the node is in the map
                     if nodes(newIndex(1),newIndex(2)).inmap
                         %calculate the g cost
                         if sum(abs(offset)) == 2
-                            g = currentNode(3) + 1.4;
+                            g = currentNode(3) + 14;
                         else
-                            g = currentNode(3) + 1;
+                            g = currentNode(3) + 10;
                         end
                         %f = g + h
                         f = g + nodes(newIndex(1),newIndex(2)).h;
