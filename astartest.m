@@ -1,5 +1,5 @@
 %% define map
-map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
+map=[-30,0;-30,40;30,40;30,60;5,60;45,90;85,60;60,60;60,40;120,40;120,60;95,60;135,90;175,60;150,60;150,40;210,40;210,60;185,60;225,90;265,60;240,60;240,40;300,40;300,0];  %default map
 inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
@@ -62,20 +62,6 @@ end
 e = cputime - t;
 fprintf("discretization time: %f\n", e);
 
-%% create bot and draw map
-botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
-%set the bots position to the first coordinate
-botSim.setBotPos(nodes(1,1).pos);
-%set the target position to the last coordinate
-target = [nodes(xnum,ynum).pos];
-%draw map
-clf;
-botSim.drawMap();
-botSim.drawBot(10,'g');
-plot(target(1),target(2),'*');
-hold on;
-drawnow;
-
 %{
 %print inmap info
 for i=xnum:-1:1
@@ -87,15 +73,32 @@ end
 %}
 
 %% algorithm
-startPos = botSim.getBotPos();
-startNode = [1,1];
-targetNode = [xnum,ynum];
+botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
+
+%set the starting and target positions
+width = xend - xstart;
+height = yend - ystart;
+startPos = botSim.getRndPtInMap(1);
+botSim.setBotPos(startPos);
+targetPos = botSim.getRndPtInMap(1);
+fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
+fprintf("target position: (%.1f,%.1f)\n", targetPos(1), targetPos(2));
+
+%find the closest nodes to the start and target positions
+startNode = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, startPos);
+targetNode = findClosestNode(xnum, ynum, xstart,xstep, ystart, ystep, targetPos);
 fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
 fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
 
+%run the A* search algorithm to find the best path from the start node to
+%the target node
 path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
+finalNode = path(end,:);
+fprintf("path length: %d\n", finalNode(4));
 
-%draw the path that the algorithm found
+%% draw map, bot, and path
+clf;
+botSim.drawMap();
 dims = size(path);
 for i=1:dims(1)
     row = path(i,:);
@@ -103,6 +106,8 @@ for i=1:dims(1)
     pos = node.pos;
     plot(pos(1),pos(2),'*');
 end
+hold on;
+drawnow;
 
 %% functions
 %Performs A* search on the graph nodes from startNode to targetNode
@@ -243,3 +248,22 @@ function path = constructPath(closedPath)
     end
 end
 
+function indexes = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, pos)
+    xrelative = pos(1) - xstart + (xstep / 2);
+    yrelative = pos(2) - ystart + (ystep / 2);
+    closesti = round(xrelative / xstep);
+    closestj = round(yrelative / ystep);
+    if closesti <= 0
+        closesti = 1;
+    end
+    if closesti > xnum
+        closesti = xnum;
+    end
+    if closestj <= 0
+        closestj = 1;
+    end
+    if closestj > ynum
+        closestj = ynum;
+    end
+    indexes = [closesti, closestj];
+end
