@@ -115,3 +115,29 @@ end
 closedList = [];
 openList = [];
 
+closedList = [closedList; startNode 0];
+node = closedList(1,:);
+
+for i=-1:1
+    for j=-1:1
+        offset = [i,j];
+        index = [node(1),node(2)];
+        newIndex = index + offset;
+        if ~(index(1) == newIndex(1) && index(2) == newIndex(2))
+            if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) < xnum && newIndex(2) < ynum
+                if nodes(newIndex(1),newIndex(2)).inmap
+                    if sum(abs(offset)) == 2
+                        g = node(3) + 1.4;
+                    else
+                        g = node(3) + 1;
+                    end
+                    f = g + nodes(newIndex(1),newIndex(2)).h;
+                    newEntry = [(index + [i,j]) f];
+                    openList = [openList; newEntry];
+                end
+            end
+        end
+    end
+end
+
+disp(openList);
