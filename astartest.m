@@ -104,3 +104,14 @@ startNode = [1,1];
 targetNode = [xnum,ynum];
 fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
 fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
+
+%calculate all node heuristic values
+for i=1:xnum
+    for j=1:ynum
+        nodes(i,j).calculateHeuristic(targetNode);
+    end
+end
+
+closedList = [];
+openList = [];
+

@@ -1,8 +1,9 @@
-classdef Node
+classdef Node < handle
     properties
         pos
         index
         inmap
+        h
     end
     
     methods
@@ -11,7 +12,15 @@ classdef Node
                 node.pos = pos;
                 node.index = index;
                 node.inmap = inmap;
+                node.h = 0;
             end
+        end
+        
+        function calculateHeuristic(node, targetNode)
+            diagonal = min(abs(targetNode - node.index));
+            straight = max(abs(targetNode - node.index)) - diagonal;
+            value = diagonal + straight;
+            node.h = value;
         end
     end
 end
