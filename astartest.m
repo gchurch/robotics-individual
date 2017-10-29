@@ -1,5 +1,5 @@
 %% define map
-map=[0,0;60,0;60,45;45,45;45,59;106,59;106,105;0,105];  %default map
+map=[0,0;100,0;100,100;0,100];  %default map
 inpolygonMapformatX = cat(1,map(:,1), map(1,1));
 inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
@@ -115,12 +115,13 @@ end
 closedList = [];
 openList = [];
 
-%nodes conatain the index followed by the f cost
-currentNode = [startNode 0];
+%nodes conatain the index followed by the g and f cost
+currentNode = [startNode 0 0];
 closedList = [closedList; currentNode];
+disp(currentNode);
 
 %iterate
-for it=1:3
+for its=1:10
     % get new nodes
     n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
     ndim = size(n);
@@ -129,17 +130,18 @@ for it=1:3
     for i=1:ndim(1)
         openList = addToOpenList(openList, n(i,:));
     end
-    openList = sortrows(openList,3);
+    openList = sortrows(openList,[4,3],{'ascend','descend'});
 
+    disp("open list:");
+    disp(openList);
+    
     % get new current node
     currentNode = openList(1,:);
     openList(1,:) = [];
-    closedList = [closedList; [currentNode(1), currentNode(2), nodes(bestNode(1),bestNode(2)).h]];
+    closedList = [closedList; currentNode];
 
     disp("closed list:");
     disp(closedList);
-    disp("open list:");
-    disp(openList);
 end
 
 % Return new nodes along with their corresponding cost
@@ -167,7 +169,7 @@ function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, curren
                         %f = g + h
                         f = g + nodes(newIndex(1),newIndex(2)).h;
                         %add node the list of new nodes
-                        newEntry = [(index + [i,j]) f];
+                        newEntry = [(index + [i,j]) g f];
                         newNodes = [newNodes; newEntry];
                     end
                 end
@@ -200,8 +202,9 @@ function newOpenList = addToOpenList(openList, newEntry)
         %if already in the open list update the cost if it is less
         if newEntry(1) == row(1) && newEntry(2) == row(2)
             bool = 1;
-            if newEntry(3) < row(3)
+            if newEntry(4) < row(4)
                 newOpenList(i,3) = newEntry(3);
+                newOpenList(i,4) = newEntry(4);
             end
         end
     end

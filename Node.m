@@ -19,7 +19,7 @@ classdef Node < handle
         function calculateHeuristic(node, targetNode)
             diagonal = min(abs(targetNode - node.index));
             straight = max(abs(targetNode - node.index)) - diagonal;
-            value = diagonal + straight;
+            value = diagonal * 1.4 + straight;
             node.h = value;
         end
     end
