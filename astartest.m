@@ -91,10 +91,12 @@ targetNode = [xnum,ynum];
 fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
 fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
 
-astarSearch(xnum, ynum, nodes, startNode, targetNode);
+path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
+disp(path);
 
+%% functions
 %Performs A* search on the graph nodes from startNode to targetNode
-function astarSearch(xnum, ynum, nodes, startNode, targetNode)
+function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
     t = cputime;
 
     %calculate all node heuristic values
@@ -131,6 +133,9 @@ function astarSearch(xnum, ynum, nodes, startNode, targetNode)
         openList(1,:) = [];
         closedList = [closedList; currentNode];
     end
+    
+    % the path that the algorithm finds
+    path = constructPath(closedList);
     
     fprintf("number of iterations to find route: %d\n", its);
     
@@ -205,6 +210,26 @@ function newOpenList = addToOpenList(openList, newEntry)
     %if not in the open list then add to the end
     if bool == 0
         newOpenList = [newOpenList; newEntry];
+    end
+end
+
+function path = constructPath(closedPath)
+    path = [];
+    last = closedPath(end,:);
+    path = [last;path];
+    dims = size(closedPath);
+    for i=dims(1):-1:1
+        row = closedPath(i,:);
+        if (row(3) == (last(3) - 10)) || (row(3) == (last(3) - 14))
+            for j=-1:1
+                for k=-1:1
+                    if ~(j == 0 && k == 0) && (row(1) == last(1) + j) && (row(2) == last(2) + k)
+                        last = row;
+                        path = [last;path];
+                    end
+                end
+            end
+        end
     end
 end
 
