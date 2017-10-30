@@ -195,31 +195,58 @@ botSim.drawMap();
 plot(target(1), target(2), '*');
 botSim.drawBot(30,'r'); %draw robot with line length 30 and green
 path = astartest(botSim, posEstimate, target);
-finalPos = followPath(botSim, posEstimate, angEstimate, path, target);
-disp(finalPos);
+followPath(botSim, posEstimate, angEstimate, path, target);
 drawnow;
+
+%get the final position and distances from x and y targets
+finalPos = botSim.getBotPos(0);
+xError = abs(target(1) - finalPos(1));
+yError = abs(target(2) - finalPos(2));
+        
+%print the target positiona and final position
+fprintf("\n");
+fprintf("Target position:\t(%.3f, %.3f)\n", target(1), target(2));
+fprintf("Final position:\t(%.3f, %.3f)\n", finalPos(1), finalPos(2));
+fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
+fprintf("\n");
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
-    disp(startPos);
-    disp(path);
+    path = [path;targetPos];
     start = startPos;
     angle = startAng;
+    newAngle = 0;
     dims = size(path);
     for i=1:dims(1)
+        %get the next target from the path
         target = path(i,:);
+        % turning the bot towards the target
         diff = target - start;
-        dist = pdist2(start, target);
-        newAngle = atan(diff(2)/diff(1));
+        newAngle = calculateAngle(diff);
         turnAngle = newAngle - angle;
-        fprintf("angle: %f\n", angle);
-        fprintf("newAngle: %f\n", newAngle);
-        fprintf("turnAngle: %f\n", turnAngle);
         botSim.turn(turnAngle);
-        botSim.move(dist);
-        start = target;
         angle = newAngle;
+        % moving the bot to the target
+        dist = pdist2(start, target);
+        botSim.move(dist);
+        %the target is the new start node in the next iteration
+        start = target;
         botSim.drawBot(30,'g'); %draw robot with line length 30 and green
     end
     finalPos = start;
+end
+
+function angle = calculateAngle(diff)
+    alpha = atan(diff(2)/diff(1));
+    if diff(1) > 0
+        angle = mod(alpha,2*pi);
+    elseif diff(1) < 0
+        angle = pi + alpha;
+    else
+        if diff(2) > 0
+            angle = pi/2;
+        else
+            angle = 3*pi/2;
+        end
+    end
 end
