@@ -1,14 +1,10 @@
-function path = astartest(botSim, start, target)
+function path = astartest(botSim, xnum, ynum, start, target)
 
     %% define map
     map=botSim.getMap();  %default map
 
     %% discretization
     t = cputime;
-
-    %how many steps in the x and y axis
-    xnum = 20;
-    ynum = 20;
  
     %the min and max axis values
     xstart = map(1,1);

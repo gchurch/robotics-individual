@@ -13,12 +13,16 @@ end
 %variables
 scanSamples = 12;
 numOfParticles = 300;
-randomRespawnProportion = 0.5;
-maxNumOfIterations = 5;
+randomRespawnProportion = 0.2;
+maxNumOfIterations = 15;
 sensorSigma = 1;
-motionNoise = 1;
-turnNoise = 0.001;
-sensorNoise = 0.0005;
+sensorNoise = 1;
+motionNoise = 0.001;
+turnNoise = 0.0005;
+
+%dimensions in the discretized grid
+xnum = 20;
+ynum = 20;
 
 %you can modify the map to take account of your robots configuration space
 modifiedMap = map; %you need to do this modification yourself
@@ -46,6 +50,8 @@ numberOfRandomRespawns = randomRespawnProportion * numOfParticles;
 posPrediction = [];
 angPrediction = 0;
 
+path = [];
+
 %% Localisation code
 n = 0;
 converged =0; %The filter has not converged yet
@@ -53,14 +59,34 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
-    % here they just turn in circles as an example
-    turn = 0.5;
-    move = 2;
-    botSim.turn(turn); %turn the real robot.  
-    botSim.move(move); %move the real robot. These movements are recorded for marking 
-    for i =1:numOfParticles %for all the particles. 
-        particles(i).turn(turn); %turn the particle in the same way as the real robot
-        particles(i).move(move); %move the particle in the same way as the real robot
+    if n <= 5
+        % here they just turn in circles as an example
+        turn = 0.5;
+        move = 2;
+        botSim.turn(turn); %turn the real robot.  
+        botSim.move(move); %move the real robot. These movements are recorded for marking 
+        for i =1:numOfParticles %for all the particles. 
+            particles(i).turn(turn); %turn the particle in the same way as the real robot
+            particles(i).move(move); %move the particle in the same way as the real robot
+        end
+    end
+    %% Write code to check for convergence
+    if n == 6
+        %perform A* search and get the path to follow
+        path = astartest(botSim, xnum, ynum, posPrediction, target);
+        fprintf("STARTED FOLLOWING PATH!!\n");
+    end
+    if n >= 6
+        nextTarget = path(1,:);
+        disp(nextTarget);
+        [newPos, newAng] = moveToPos(botSim, particles, posPrediction, angPrediction, nextTarget);
+        path(1,:) = [];
+        posPrediction = newPos;
+        angPrediction = newAng;
+        pathDim = size(path);
+        if pathDim(1) == 0
+            converged = 1;
+        end
     end
     
     %% Write code for updating your particles scans
@@ -123,7 +149,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
         actualAng = mod(botSim.getBotAng(0),2*pi);
-        xError = abs(posPrediction(1) - actualPos(1));
+        xError = abs((1) - actualPos(1));
         yError = abs(posPrediction(2) - actualPos(2));
         angError = abs(angPrediction - actualAng);
         
@@ -149,9 +175,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         plot(target(1),target(2),"*");
         drawnow;
     end
-    
-    %% Write code to check for convergence
-	
 
     %% Write code for resampling your particles
     
@@ -199,7 +222,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-
+%{
 if botSim.debug()
     hold off
     botSim.drawMap();
@@ -208,7 +231,7 @@ if botSim.debug()
 end
 
 %perform A* search and get the path to follow
-path = astartest(botSim, posPrediction, target);
+path = astartest(botSim, xnum, ynum, posPrediction, target);
 %make the bot follow the given path
 followPath(botSim, posPrediction, angPrediction, path, target);
 
@@ -227,16 +250,21 @@ if botSim.debug()
     fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
     fprintf("\n");
 end
-
+%}
 end
 
-function [newPos,newAngle] = moveToPos(botSim, startPos, startAng, targetPos)
+function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, targetPos)
     newAngle = calculateAngle(startPos,targetPos);
     turnAngle = newAngle - startAng;
     botSim.turn(turnAngle);
     dist = pdist2(startPos, targetPos);
     botSim.move(dist);
     newPos = targetPos;
+    pdim = size(particles);
+    for i=1:pdim(1)
+        particles(i).turn(turnAngle);
+        particles(i).move(dist);
+    end
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
