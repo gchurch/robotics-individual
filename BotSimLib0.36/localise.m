@@ -190,10 +190,36 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
+hold off
+botSim.drawMap();
+plot(target(1), target(2), '*');
+botSim.drawBot(30,'r'); %draw robot with line length 30 and green
 path = astartest(botSim, posEstimate, target);
-moveToFirstPos(botSim, posEstimate, path);
+finalPos = followPath(botSim, posEstimate, angEstimate, path, target);
+disp(finalPos);
+drawnow;
 end
 
-function moveToFirstPos(botSim, posEstimate, path)
-    firstNode = path(1,:);
+function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
+    disp(startPos);
+    disp(path);
+    start = startPos;
+    angle = startAng;
+    dims = size(path);
+    for i=1:dims(1)
+        target = path(i,:);
+        diff = target - start;
+        dist = pdist2(start, target);
+        newAngle = atan(diff(2)/diff(1));
+        turnAngle = newAngle - angle;
+        fprintf("angle: %f\n", angle);
+        fprintf("newAngle: %f\n", newAngle);
+        fprintf("turnAngle: %f\n", turnAngle);
+        botSim.turn(turnAngle);
+        botSim.move(dist);
+        start = target;
+        angle = newAngle;
+        botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+    end
+    finalPos = start;
 end

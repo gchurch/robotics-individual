@@ -99,15 +99,11 @@ function path = astartest(botSim, start, target)
     path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
 
     %% draw map, bot, and path
-    clf;
-    botSim.drawMap();
     dims = size(path);
     for i=1:dims(1)
         pos = path(i,:);
         plot(pos(1),pos(2),'*');
     end
-    hold on;
-    drawnow;
 end
 
 %% functions
@@ -244,7 +240,7 @@ function path = constructPath(nodes, closedPath)
                 for k=-1:1
                     if ~(j == 0 && k == 0) && (row(1) == last(1) + j) && (row(2) == last(2) + k)
                         last = row;
-                        pos = nodes(last(1),last(2)).pos
+                        pos = nodes(last(1),last(2)).pos;
                         path = [pos;path];
                     end
                 end
