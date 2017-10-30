@@ -34,6 +34,10 @@ end
 %iteration
 numberOfRandomRespawns = randomRespawnProportion * numOfParticles;
 
+%
+posEstimate = []
+angEstimate = 0;
+
 %% Localisation code
 n = 0;
 converged =0; %The filter has not converged yet
@@ -98,6 +102,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     %value and index of the best weighted particle
     [val,idx] = max(weights);
+    posEstimate = particles(idx).getBotPos();
+    angEstimate = mod(particles(idx).getBotAng(),2*pi);
     
     
     %% Drawing
@@ -109,21 +115,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
         actualAng = mod(botSim.getBotAng(0),2*pi);
-        particlePos = particles(idx).getBotPos();
-        particleAng = mod(particles(idx).getBotAng(),2*pi);
-        xError = abs(particlePos(1) - actualPos(1));
-        yError = abs(particlePos(2) - actualPos(2));
-        angError = abs(particleAng - actualAng);
+        xError = abs(posEstimate(1) - actualPos(1));
+        yError = abs(posEstimate(2) - actualPos(2));
+        angError = abs(angEstimate - actualAng);
         
         %print actual and predicted position
         fprintf("Actual position:\t(%.3f, %.3f)\n", actualPos(1), actualPos(2));
-        fprintf("Predicted position:\t(%.3f, %.3f)\n", particlePos(1), particlePos(2));
+        fprintf("Predicted position:\t(%.3f, %.3f)\n", posEstimate(1), posEstimate(2));
         fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
         fprintf("\n");
         
         %print actual and predicted angle
         fprintf("Actual angle:\t\t%.3f\n", actualAng);
-        fprintf("Predicted angle:\t%.3f\n", particleAng);
+        fprintf("Predicted angle:\t%.3f\n", angEstimate);
         fprintf("Angle error:\t\t%.3f\n", angError);
         fprintf("\n\n");
         
@@ -186,6 +190,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-path = astartest(botSim, target);
-disp(path);
+[path,nodes] = astartest(botSim, posEstimate, target);
+moveToFirstPos(botSim, nodes, path, posEstimate);
+end
+
+function moveToFirstPos(botSim, nodes, path, posEstimate)
+    firstNode = path(1,:);
+    target = nodes(firstNode(1), firstNode(2)).pos;
 end

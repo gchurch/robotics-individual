@@ -1,4 +1,4 @@
-function path = astartest(botSim, target)
+function [path,nodes] = astartest(botSim, start, target)
 
     %% define map
     map=botSim.getMap();  %default map
@@ -78,7 +78,7 @@ function path = astartest(botSim, target)
     %set the starting and target positions
     width = xend - xstart;
     height = yend - ystart;
-    startPos = botSim.getBotPos();
+    startPos = start;
     targetPos = target;
     %fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
     %fprintf("target position: (%.1f,%.1f)\n", targetPos(1), targetPos(2));
@@ -97,8 +97,6 @@ function path = astartest(botSim, target)
     %run the A* search algorithm to find the best path from the start node to
     %the target node
     path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
-    finalNode = path(end,:);
-    fprintf("path length: %d\n", finalNode(4));
 
     %% draw map, bot, and path
     clf;
@@ -156,6 +154,8 @@ function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
     
     % the path that the algorithm finds
     path = constructPath(closedList);
+    finalNode = path(end,:);
+    fprintf("path length: %d\n", finalNode(4));
     
     fprintf("iterations: %d\n", its);
     
