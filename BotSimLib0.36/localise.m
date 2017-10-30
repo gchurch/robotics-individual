@@ -14,8 +14,11 @@ end
 scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
-maxNumOfIterations = 5;
+maxNumOfIterations = 10;
 sensorSigma = 1;
+motionNoise = 1;
+turnNoise = 0.001;
+sensorNoise = 0.0005;
 
 %you can modify the map to take account of your robots configuration space
 modifiedMap = map; %you need to do this modification yourself
@@ -30,15 +33,18 @@ for i = 1:numOfParticles
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
     particles(i).setScanConfig(botSim.generateScanConfig(scanSamples));
+    particles(i).setMotionNoise(motionNoise);
+    particles(i).setTurningNoise(turnNoise);
+    particles(i).setSensorNoise(sensorNoise);
 end
 
 %How many particles will be respawned at a random location after each
 %iteration
 numberOfRandomRespawns = randomRespawnProportion * numOfParticles;
 
-%
-posEstimate = [];
-angEstimate = 0;
+%Prediction of the pose of the robot
+posPrediction = [];
+angPrediction = 0;
 
 %% Localisation code
 n = 0;
@@ -47,7 +53,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
-    % here they just turn in cicles as an example
+    % here they just turn in circles as an example
     turn = 0.5;
     move = 2;
     botSim.turn(turn); %turn the real robot.  
@@ -104,8 +110,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
 
     %value and index of the best weighted particle
     [val,idx] = max(weights);
-    posEstimate = particles(idx).getBotPos();
-    angEstimate = mod(particles(idx).getBotAng(),2*pi);
+    posPrediction = particles(idx).getBotPos();
+    angPrediction = mod(particles(idx).getBotAng(),2*pi);
     
     
     %% Drawing
@@ -117,19 +123,19 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
         actualAng = mod(botSim.getBotAng(0),2*pi);
-        xError = abs(posEstimate(1) - actualPos(1));
-        yError = abs(posEstimate(2) - actualPos(2));
-        angError = abs(angEstimate - actualAng);
+        xError = abs(posPrediction(1) - actualPos(1));
+        yError = abs(posPrediction(2) - actualPos(2));
+        angError = abs(angPrediction - actualAng);
         
         %print actual and predicted position
         fprintf("Actual position:\t(%.3f, %.3f)\n", actualPos(1), actualPos(2));
-        fprintf("Predicted position:\t(%.3f, %.3f)\n", posEstimate(1), posEstimate(2));
+        fprintf("Predicted position:\t(%.3f, %.3f)\n", posPrediction(1), posPrediction(2));
         fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
         fprintf("\n");
         
         %print actual and predicted angle
         fprintf("Actual angle:\t\t%.3f\n", actualAng);
-        fprintf("Predicted angle:\t%.3f\n", angEstimate);
+        fprintf("Predicted angle:\t%.3f\n", angPrediction);
         fprintf("Angle error:\t\t%.3f\n", angError);
         fprintf("\n\n");
         
@@ -157,7 +163,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
     
     %the number of particles to be respawned around current particles
-    particleResamples = zeros([numOfParticles,1]);
+    particleResamples = zeros(numOfParticles,1);
     for i=1:(numOfParticles-numberOfRandomRespawns)
         random = rand();
         for j=1:numOfParticles
@@ -175,11 +181,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             %get the pos of the parcticles to resample around
             particlePos = particles(i).getBotPos();
             particlePos = particlePos(1,:);
-            %set the particles' new pose with some error (need to set ang
-            %aswell at some point
+            particleAng = particles(i).getBotAng();
+            %set the particles' new pose with some error (need to set ang aswell at some point
             for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
                 particlesUsed = particlesUsed + 1;
-                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
+                particles(j).setBotPos([particlePos(1) + randn * motionNoise, particlePos(2) + randn * motionNoise]);
             end
         end
     end
@@ -193,7 +199,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-%{
+
 if botSim.debug()
     hold off
     botSim.drawMap();
@@ -202,9 +208,9 @@ if botSim.debug()
 end
 
 %perform A* search and get the path to follow
-path = astartest(botSim, posEstimate, target);
+path = astartest(botSim, posPrediction, target);
 %make the bot follow the given path
-followPath(botSim, posEstimate, angEstimate, path, target);
+followPath(botSim, posPrediction, angPrediction, path, target);
 
 if botSim.debug()
     drawnow;
@@ -221,7 +227,6 @@ if botSim.debug()
     fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
     fprintf("\n");
 end
-%}
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
