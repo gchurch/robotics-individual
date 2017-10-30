@@ -2,13 +2,17 @@ function [botSim] = localise(botSim,map,target)
 %This function returns botSim, and accepts, botSim, a map and a target.
 %LOCALISE Template localisation function
 
+start = botSim.getBotPos();
+fprintf("start: (%f,%f)\n", start(1), start(2));
+fprintf("target: (%f,%f)\n", target(1), target(2));
+
 %% setup code
 
 %variables
 scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
-maxNumOfIterations = 10;
+maxNumOfIterations = 5;
 sensorSigma = 1;
 
 %you can modify the map to take account of your robots configuration space
@@ -130,6 +134,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
         particles(idx).drawBot(30,'r');
+        plot(target(1),target(2),"*");
         drawnow;
     end
     
@@ -181,4 +186,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
+path = astartest(botSim, target);
+disp(path);
 end

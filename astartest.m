@@ -1,113 +1,118 @@
-%% define map
-map=[-30,0;-30,40;30,40;30,60;5,60;45,90;85,60;60,60;60,40;120,40;120,60;95,60;135,90;175,60;150,60;150,40;210,40;210,60;185,60;225,90;265,60;240,60;240,40;300,40;300,0];  %default map
-inpolygonMapformatX = cat(1,map(:,1), map(1,1));
-inpolygonMapformatY = cat(1,map(:,2), map(1,2));
+function path = astartest(botSim, target)
 
-%% discretization
-t = cputime;
+    %% define map
+    map=botSim.getMap();  %default map
+    inpolygonMapformatX = cat(1,map(:,1), map(1,1));
+    inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
-%how many steps in the x and y axis
-xnum = 20;
-ynum = 20;
+    %% discretization
+    t = cputime;
 
-%the min and max axis values
-xstart = map(1,1);
-xend = map(1,1);
-ystart = map(1,2);
-yend = map(1,2);
+    %how many steps in the x and y axis
+    xnum = 20;
+    ynum = 20;
+ 
+    %the min and max axis values
+    xstart = map(1,1);
+    xend = map(1,1);
+    ystart = map(1,2);
+    yend = map(1,2);
 
-dim = size(map);
-for i=1:dim(1)
-    if map(i,1) < xstart
-        xstart = map(i,1);
-    end
-    if map(i,1) > xend
-        xend = map(i,1);
-    end
-    if map(i,2) < ystart
-        ystart = map(i,2);
-    end
-    if map(i,2) > yend
-        yend = map(i,2);
-    end
-end
-
-%the real distance between each node
-xstep = (xend - xstart) / xnum;
-ystep = (yend - ystart) / ynum;
-
-%array of objects holding information for each node
-nodes(xnum,ynum) = Node;
-%getting map coordinates and determining if coordinate is inside the map
-for i=1:xnum
-    for j=1:ynum
-        % we subtract 0.5 so that we reside in the middle of the squares
-        x = xstart + (i-0.5) * xstep;
-        y = ystart + (j-0.5) * ystep;
-        % set node pos property
-        pos = [x,y];
-        nodes(i,j).pos = pos;
-        % set node index property
-        index = [i,j];
-        nodes(i,j).index = index;
-        %set node inmap property
-        if inpolygon(pos(1),pos(2),inpolygonMapformatX,inpolygonMapformatY) == 1
-            nodes(i,j).inmap = 1;
-        else
-            nodes(i,j).inmap = 0;
+    dim = size(map);
+    for i=1:dim(1)
+        if map(i,1) < xstart
+            xstart = map(i,1);
+        end
+        if map(i,1) > xend
+            xend = map(i,1);
+        end
+        if map(i,2) < ystart
+            ystart = map(i,2);
+        end
+        if map(i,2) > yend
+            yend = map(i,2);
         end
     end
-end
 
-e = cputime - t;
-fprintf("discretization time: %f\n", e);
+    %the real distance between each node
+    xstep = (xend - xstart) / xnum;
+    ystep = (yend - ystart) / ynum;
 
-%{
-%print inmap info
-for i=xnum:-1:1
-    for j=1:ynum
-        fprintf("%d ", nodes(j,i).inmap);
+    %array of objects holding information for each node
+    nodes(xnum,ynum) = Node;
+    %getting map coordinates and determining if coordinate is inside the map
+    for i=1:xnum
+        for j=1:ynum
+            % we subtract 0.5 so that we reside in the middle of the squares
+            x = xstart + (i-0.5) * xstep;
+            y = ystart + (j-0.5) * ystep;
+            % set node pos property
+            pos = [x,y];
+            nodes(i,j).pos = pos;
+            % set node index property
+            index = [i,j];
+            nodes(i,j).index = index;
+            %set node inmap property
+            if inpolygon(pos(1),pos(2),inpolygonMapformatX,inpolygonMapformatY) == 1
+                nodes(i,j).inmap = 1;
+            else
+                nodes(i,j).inmap = 0;
+            end
+        end
     end
-    fprintf("\n");
+
+    e = cputime - t;
+    fprintf("discretization time: %f\n", e);
+
+    %{
+    %print inmap info
+    for i=xnum:-1:1
+        for j=1:ynum
+            fprintf("%d ", nodes(j,i).inmap);
+        end
+        fprintf("\n");
+    end
+    %}
+
+    %% algorithm
+    %set the starting and target positions
+    width = xend - xstart;
+    height = yend - ystart;
+    startPos = botSim.getBotPos();
+    targetPos = target;
+    %fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
+    %fprintf("target position: (%.1f,%.1f)\n", targetPos(1), targetPos(2));
+   
+
+    %find the closest nodes to the start and target positions
+    startNode = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, startPos);
+    targetNode = findClosestNode(xnum, ynum, xstart,xstep, ystart, ystep, targetPos);
+    startNodePos = nodes(startNode(1), startNode(2)).pos;
+    targetNodePos = nodes(targetNode(1), targetNode(2)).pos;
+    fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
+    fprintf("start node pos: (%.1f, %.1f)\n", startNodePos(1), startNodePos(2));
+    fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
+    fprintf("target node pos: (%.1f, %.1f)\n", targetNodePos(1), targetNodePos(2));
+
+    %run the A* search algorithm to find the best path from the start node to
+    %the target node
+    path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
+    finalNode = path(end,:);
+    fprintf("path length: %d\n", finalNode(4));
+
+    %% draw map, bot, and path
+    clf;
+    botSim.drawMap();
+    dims = size(path);
+    for i=1:dims(1)
+        row = path(i,:);
+        node = nodes(row(1),row(2));
+        pos = node.pos;
+        plot(pos(1),pos(2),'*');
+    end
+    hold on;
+    drawnow;
 end
-%}
-
-%% algorithm
-botSim = BotSim(map,[0,0,0]);  %sets up a botSim object a map, and debug mode on.
-
-%set the starting and target positions
-width = xend - xstart;
-height = yend - ystart;
-startPos = botSim.getRndPtInMap(1);
-botSim.setBotPos(startPos);
-targetPos = botSim.getRndPtInMap(1);
-fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
-fprintf("target position: (%.1f,%.1f)\n", targetPos(1), targetPos(2));
-
-%find the closest nodes to the start and target positions
-startNode = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, startPos);
-targetNode = findClosestNode(xnum, ynum, xstart,xstep, ystart, ystep, targetPos);
-fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
-fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
-
-%run the A* search algorithm to find the best path from the start node to
-%the target node
-path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
-finalNode = path(end,:);
-fprintf("path length: %d\n", finalNode(4));
-
-%% draw map, bot, and path
-clf;
-botSim.drawMap();
-dims = size(path);
-for i=1:dims(1)
-    row = path(i,:);
-    node = nodes(row(1),row(2));
-    pos = node.pos;
-    plot(pos(1),pos(2),'*');
-end
-hold on;
-drawnow;
 
 %% functions
 %Performs A* search on the graph nodes from startNode to targetNode
