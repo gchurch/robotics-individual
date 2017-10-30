@@ -13,8 +13,8 @@ end
 %variables
 scanSamples = 12;
 numOfParticles = 300;
-randomRespawnProportion = 0.2;
-maxNumOfIterations = 10;
+randomRespawnProportion = 0.5;
+maxNumOfIterations = 5;
 sensorSigma = 1;
 motionNoise = 1;
 turnNoise = 0.001;
@@ -150,7 +150,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         drawnow;
     end
     
-    %% Write code to check for convergence   
+    %% Write code to check for convergence
 	
 
     %% Write code for resampling your particles
@@ -227,6 +227,16 @@ if botSim.debug()
     fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
     fprintf("\n");
 end
+
+end
+
+function [newPos,newAngle] = moveToPos(botSim, startPos, startAng, targetPos)
+    newAngle = calculateAngle(startPos,targetPos);
+    turnAngle = newAngle - startAng;
+    botSim.turn(turnAngle);
+    dist = pdist2(startPos, targetPos);
+    botSim.move(dist);
+    newPos = targetPos;
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
@@ -238,17 +248,9 @@ function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
     for i=1:dims(1)
         %get the next target from the path
         target = path(i,:);
-        % turning the bot towards the target
-        diff = target - start;
-        newAngle = calculateAngle(diff);
-        turnAngle = newAngle - angle;
-        botSim.turn(turnAngle);
-        angle = newAngle;
-        % moving the bot to the target
-        dist = pdist2(start, target);
-        botSim.move(dist);
-        %the target is the new start node in the next iteration
-        start = target;
+        [newPos,newAng] = moveToPos(botSim, start, angle, target);
+        start = newPos;
+        angle = newAng;
         if botSim.debug()
             botSim.drawBot(30,'g'); %draw robot with line length 30 and green
         end
@@ -256,7 +258,8 @@ function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
     finalPos = start;
 end
 
-function angle = calculateAngle(diff)
+function angle = calculateAngle(start, target)
+    diff = target - start;
     alpha = atan(diff(2)/diff(1));
     if diff(1) > 0
         angle = mod(alpha,2*pi);
