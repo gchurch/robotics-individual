@@ -2,8 +2,6 @@ function path = astartest(botSim, start, target)
 
     %% define map
     map=botSim.getMap();  %default map
-    inpolygonMapformatX = cat(1,map(:,1), map(1,1));
-    inpolygonMapformatY = cat(1,map(:,2), map(1,2));
 
     %% discretization
     t = cputime;
@@ -53,7 +51,7 @@ function path = astartest(botSim, start, target)
             index = [i,j];
             nodes(i,j).index = index;
             %set node inmap property
-            if inpolygon(pos(1),pos(2),inpolygonMapformatX,inpolygonMapformatY) == 1
+            if botSim.pointInsideMap(pos)
                 nodes(i,j).inmap = 1;
             else
                 nodes(i,j).inmap = 0;

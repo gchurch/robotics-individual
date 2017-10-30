@@ -37,7 +37,7 @@ end
 numberOfRandomRespawns = randomRespawnProportion * numOfParticles;
 
 %
-posEstimate = []
+posEstimate = [];
 angEstimate = 0;
 
 %% Localisation code
@@ -61,15 +61,15 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     botScan = botSim.ultraScan()'; %get a scan from the real robot.
     
     %array containing the scans for each particle
-    particleScans = [];
+    particleScans = zeros(numOfParticles, scanSamples);
     for i = 1:numOfParticles
-        particleScans = [particleScans; particles(i).ultraScan()'];
+        particleScans(i,:) = particles(i).ultraScan()';
     end
     
     %% Write code for scoring your particles    
     
     %the probabilities of each particleScan
-    probabilities = [];
+    probabilities = zeros(numOfParticles,1);
     %iterating through all of the particleScans
     for i = 1:numOfParticles
         highest = -1;
@@ -87,7 +87,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
                 bestShift = j;
             end
         end
-        probabilities = [probabilities; highest];
+        probabilities(i) = highest;
         %rotate the particles so they face the best direction
         newAng = particles(i).getBotAng() - bestShift * (2 * pi) / scanSamples;
         newAng = mod(newAng, 2 * pi);
@@ -95,11 +95,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
     
     %normalizing probabilities
-    weights = [];
+    weights = zeros(numOfParticles,1);
     probabilitiesSum = sum(probabilities);
     for i = 1:numOfParticles
         weight = probabilities(i) / probabilitiesSum;
-        weights = [weights; weight];
+        weights(i) = weight;
     end
 
     %value and index of the best weighted particle
@@ -150,9 +150,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     %% Write code for resampling your particles
     
     %calculating the cumulative distribution of the weights
-    cumulative = [weights(1)];
+    cumulative = zeros(numOfParticles,1);
+    cumulative(1) = weights(1);
     for i=2:numOfParticles
-        cumulative = [cumulative; cumulative(i-1) + weights(i)];
+        cumulative(i) = cumulative(i-1) + weights(i);
     end
     
     %the number of particles to be respawned around current particles
@@ -192,6 +193,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
+%{
 if botSim.debug()
     hold off
     botSim.drawMap();
@@ -219,6 +221,7 @@ if botSim.debug()
     fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
     fprintf("\n");
 end
+%}
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
