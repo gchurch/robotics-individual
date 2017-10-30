@@ -1,4 +1,4 @@
-function [path,nodes] = astartest(botSim, start, target)
+function path = astartest(botSim, start, target)
 
     %% define map
     map=botSim.getMap();  %default map
@@ -103,9 +103,7 @@ function [path,nodes] = astartest(botSim, start, target)
     botSim.drawMap();
     dims = size(path);
     for i=1:dims(1)
-        row = path(i,:);
-        node = nodes(row(1),row(2));
-        pos = node.pos;
+        pos = path(i,:);
         plot(pos(1),pos(2),'*');
     end
     hold on;
@@ -153,9 +151,9 @@ function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
     end
     
     % the path that the algorithm finds
-    path = constructPath(closedList);
+    path = constructPath(nodes, closedList);
     finalNode = path(end,:);
-    fprintf("path length: %d\n", finalNode(4));
+    fprintf("path length: %d\n", closedList(end,4));
     
     fprintf("iterations: %d\n", its);
     
@@ -233,10 +231,11 @@ function newOpenList = addToOpenList(openList, newEntry)
     end
 end
 
-function path = constructPath(closedPath)
+function path = constructPath(nodes, closedPath)
     path = [];
     last = closedPath(end,:);
-    path = [last;path];
+    pos = nodes(last(1),last(2)).pos;
+    path = [pos;path];
     dims = size(closedPath);
     for i=dims(1):-1:1
         row = closedPath(i,:);
@@ -245,7 +244,8 @@ function path = constructPath(closedPath)
                 for k=-1:1
                     if ~(j == 0 && k == 0) && (row(1) == last(1) + j) && (row(2) == last(2) + k)
                         last = row;
-                        path = [last;path];
+                        pos = nodes(last(1),last(2)).pos
+                        path = [pos;path];
                     end
                 end
             end

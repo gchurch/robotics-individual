@@ -190,11 +190,10 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-[path,nodes] = astartest(botSim, posEstimate, target);
-moveToFirstPos(botSim, nodes, path, posEstimate);
+path = astartest(botSim, posEstimate, target);
+moveToFirstPos(botSim, posEstimate, path);
 end
 
-function moveToFirstPos(botSim, nodes, path, posEstimate)
+function moveToFirstPos(botSim, posEstimate, path)
     firstNode = path(1,:);
-    target = nodes(firstNode(1), firstNode(2)).pos;
 end
