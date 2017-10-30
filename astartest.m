@@ -62,7 +62,9 @@ function path = astartest(botSim, start, target)
     end
 
     e = cputime - t;
-    fprintf("discretization time: %f\n", e);
+    if botSim.debug()
+        fprintf("discretization time: %f\n", e);
+    end
 
     %{
     %print inmap info
@@ -89,14 +91,15 @@ function path = astartest(botSim, start, target)
     targetNode = findClosestNode(xnum, ynum, xstart,xstep, ystart, ystep, targetPos);
     startNodePos = nodes(startNode(1), startNode(2)).pos;
     targetNodePos = nodes(targetNode(1), targetNode(2)).pos;
-    fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
-    fprintf("start node pos: (%.1f, %.1f)\n", startNodePos(1), startNodePos(2));
-    fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
-    fprintf("target node pos: (%.1f, %.1f)\n", targetNodePos(1), targetNodePos(2));
-
+    if botSim.debug()
+        fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
+        fprintf("start node pos: (%.1f, %.1f)\n", startNodePos(1), startNodePos(2));
+        fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
+        fprintf("target node pos: (%.1f, %.1f)\n", targetNodePos(1), targetNodePos(2));
+    end
     %run the A* search algorithm to find the best path from the start node to
     %the target node
-    path = astarSearch(xnum, ynum, nodes, startNode, targetNode);
+    path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode);
 
     %% draw map, bot, and path
     dims = size(path);
@@ -108,7 +111,7 @@ end
 
 %% functions
 %Performs A* search on the graph nodes from startNode to targetNode
-function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
+function path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode)
     t = cputime;
 
     %calculate all node heuristic values
@@ -149,12 +152,14 @@ function path = astarSearch(xnum, ynum, nodes, startNode, targetNode)
     % the path that the algorithm finds
     path = constructPath(nodes, closedList);
     finalNode = path(end,:);
-    fprintf("path length: %d\n", closedList(end,4));
-    
-    fprintf("iterations: %d\n", its);
     
     e = cputime - t;
-    fprintf("A* search algorithm time: %f\n", e);
+    
+    if botSim.debug()
+        fprintf("path length: %d\n", closedList(end,4));
+        fprintf("iterations: %d\n", its);
+        fprintf("A* search algorithm time: %f\n", e);
+    end
 end
 
 % Return new nodes along with their corresponding cost

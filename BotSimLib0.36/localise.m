@@ -2,9 +2,11 @@ function [botSim] = localise(botSim,map,target)
 %This function returns botSim, and accepts, botSim, a map and a target.
 %LOCALISE Template localisation function
 
-start = botSim.getBotPos();
-fprintf("start: (%f,%f)\n", start(1), start(2));
-fprintf("target: (%f,%f)\n", target(1), target(2));
+if botSim.debug()
+    start = botSim.getBotPos();
+    fprintf("start: (%f,%f)\n", start(1), start(2));
+    fprintf("target: (%f,%f)\n", target(1), target(2));
+end
 
 %% setup code
 
@@ -190,25 +192,33 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-hold off
-botSim.drawMap();
-plot(target(1), target(2), '*');
-botSim.drawBot(30,'r'); %draw robot with line length 30 and green
-path = astartest(botSim, posEstimate, target);
-followPath(botSim, posEstimate, angEstimate, path, target);
-drawnow;
+if botSim.debug()
+    hold off
+    botSim.drawMap();
+    plot(target(1), target(2), '*');
+    botSim.drawBot(30,'r'); %draw robot with line length 30 and green
+end
 
-%get the final position and distances from x and y targets
-finalPos = botSim.getBotPos(0);
-xError = abs(target(1) - finalPos(1));
-yError = abs(target(2) - finalPos(2));
+%perform A* search and get the path to follow
+path = astartest(botSim, posEstimate, target);
+%make the bot follow the given path
+followPath(botSim, posEstimate, angEstimate, path, target);
+
+if botSim.debug()
+    drawnow;
+
+    %get the final position and distances from x and y targets
+    finalPos = botSim.getBotPos(0);
+    xError = abs(target(1) - finalPos(1));
+    yError = abs(target(2) - finalPos(2));
         
-%print the target positiona and final position
-fprintf("\n");
-fprintf("Target position:\t(%.3f, %.3f)\n", target(1), target(2));
-fprintf("Final position:\t(%.3f, %.3f)\n", finalPos(1), finalPos(2));
-fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
-fprintf("\n");
+    %print the target positiona and final position
+    fprintf("\n");
+    fprintf("Target position:\t(%.3f, %.3f)\n", target(1), target(2));
+    fprintf("Final position:\t(%.3f, %.3f)\n", finalPos(1), finalPos(2));
+    fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
+    fprintf("\n");
+end
 end
 
 function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
@@ -231,7 +241,9 @@ function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
         botSim.move(dist);
         %the target is the new start node in the next iteration
         start = target;
-        botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+        if botSim.debug()
+            botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+        end
     end
     finalPos = start;
 end
