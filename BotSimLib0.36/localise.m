@@ -255,6 +255,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
                 particlesUsed = particlesUsed + 1;
                 particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
+                particles(j).setBotAng(particleAng + randn * turnNoise);
             end
         end
     end
