@@ -12,7 +12,7 @@ end
 
 %variables
 scanSamples = 15;
-numOfParticles = 400;
+numOfParticles = 300;
 randomRespawnProportion = 0.4;
 maxNumOfIterations = 300;
 sensorSigma = 1;
@@ -21,8 +21,8 @@ motionNoise = 0.001;
 turnNoise = 0.0005;
 
 %dimensions in the discretized grid
-xnum = 20;
-ynum = 20;
+xnum = 40;
+ynum = 40;
 
 %you can modify the map to take account of your robots configuration space
 modifiedMap = map; %you need to do this modification yourself
