@@ -19,6 +19,7 @@ classdef DiscreteMap < handle
                 obj.xnum = xnum;
                 obj.ynum = ynum;
                 discretize(obj, botSim);
+                padding(obj);
             end
         end
         
@@ -111,6 +112,37 @@ classdef DiscreteMap < handle
                 closestj = obj.ynum;
             end
             indexes = [closesti, closestj];
+        end
+        
+        function padding(obj)
+             newNodes(obj.xnum,obj.ynum) = Node;
+             for i=1:obj.xnum
+                 for j=1:obj.ynum
+                     newNodes(i,j).pos = obj.nodes(i,j).pos;
+                     newNodes(i,j).index = obj.nodes(i,j).index;
+                     newNodes(i,j).inmap = obj.nodes(i,j).inmap;
+                     newNodes(i,j).h = obj.nodes(i,j).h;
+                 end
+             end
+             for i=1:obj.xnum
+                 for j=1:obj.ynum
+                     out = 0;
+                     for a=-3:3
+                         for b=-3:3
+                             newIndex = [i+a,j+b];
+                             if newIndex(1) > 0 && newIndex(1) <= obj.xnum && newIndex(2) > 0 && newIndex(2) <= obj.ynum
+                                 if obj.nodes(newIndex(1), newIndex(2)).inmap == 0
+                                     out = 1;
+                                 end
+                             end
+                         end
+                     end
+                     if out == 1
+                         newNodes(i,j).inmap = 0;
+                     end
+                 end
+             end
+             obj.nodes = newNodes;
         end
     end
 end

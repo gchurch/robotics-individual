@@ -14,7 +14,7 @@ end
 scanSamples = 15;
 numOfParticles = 300;
 randomRespawnProportion = 0.4;
-maxNumOfIterations = 300;
+maxNumOfIterations = 1000;
 sensorSigma = 1;
 sensorNoise = 1;
 motionNoise = 0.001;
@@ -280,7 +280,7 @@ end
 if botSim.debug()
     fprintf("Number of paths planned: %d\n", pathPlans);
 end
-disp("way points:");
+fprintf("\nway points:\n");
 disp(waypoints);
 end
 
