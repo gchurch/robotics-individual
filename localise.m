@@ -11,8 +11,8 @@ end
 %% setup code
 
 %variables
-scanSamples = 12;
-numOfParticles = 300;
+scanSamples = 15;
+numOfParticles = 400;
 randomRespawnProportion = 0.4;
 maxNumOfIterations = 300;
 sensorSigma = 1;
