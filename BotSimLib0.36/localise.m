@@ -14,7 +14,7 @@ end
 scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.5;
-maxNumOfIterations = 50;
+maxNumOfIterations = 300;
 sensorSigma = 1;
 sensorNoise = 1;
 motionNoise = 0.001;
@@ -38,6 +38,7 @@ particles(numOfParticles,1) = BotSim; %how to set up a vector of objects
 discreteMap = DiscreteMap(botSim, xnum, ynum);
 targetNode = discreteMap.findClosestNode(target);
 
+%initialise particles
 for i = 1:numOfParticles
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
@@ -58,6 +59,8 @@ angPrediction = 0;
 %path planning info
 currentPath = [];
 nodePrediction = [0,0];
+
+pathPlans = 0;
 
 %% Localisation code
 n = 0;
@@ -81,9 +84,16 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %% Write code to check for convergence
         %The node that we are at according to our position prediction
         currentNode = discreteMap.findClosestNode(posPrediction);
-        fprintf("currentNode: (%d,%d)\n", currentNode(1), currentNode(2));
-        fprintf("predictedNode: (%d,%d)\n", nodePrediction(1), nodePrediction(2));
-        fprintf("targetNode: (%d,%d)\n", targetNode(1), targetNode(2));
+        
+        %print node values
+        %{
+        if botSim.debug()
+            fprintf("currentNode: (%d,%d)\n", currentNode(1), currentNode(2));
+            fprintf("predictedNode: (%d,%d)\n", nodePrediction(1), nodePrediction(2));
+            fprintf("targetNode: (%d,%d)\n", targetNode(1), targetNode(2));
+        end
+        %}
+        
         %If you are located in the final node then move to the final target position
         if currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2)
             [newPos, newAng] = moveToPos(botSim, particles, posPrediction, angPrediction, target);
@@ -95,8 +105,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %Check if we should plan a new path
         if ~(currentNode(1) == nodePrediction(1)) || ~(currentNode(2) == nodePrediction(2))
           path = findPath(botSim, discreteMap, posPrediction, target);
+          pathPlans = pathPlans + 1;
           nodePrediction = currentNode;
-          fprintf("CALCULATED NEW PATH!!\n");
+          if botSim.debug()
+              fprintf("CALCULATED NEW PATH!!\n");
+          end
         end
         
         pathDim = size(path);
@@ -255,35 +268,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-%{
-if botSim.debug()
-    hold off
-    botSim.drawMap();
-    plot(target(1), target(2), '*');
-    botSim.drawBot(30,'r'); %draw robot with line length 30 and green
-end
-
-%perform A* search and get the path to follow
-path = findPath(botSim, discreteMap, posPrediction, target);
-%make the bot follow the given path
-followPath(botSim, discreteMap, posPrediction, angPrediction, path, target);
-
-if botSim.debug()
-    drawnow;
-
-    %get the final position and distances from x and y targets
-    finalPos = botSim.getBotPos(0);
-    xError = abs(target(1) - finalPos(1));
-    yError = abs(target(2) - finalPos(2));
-        
-    %print the target positiona and final position
-    fprintf("\n");
-    fprintf("Target position:\t(%.3f, %.3f)\n", target(1), target(2));
-    fprintf("Final position:\t(%.3f, %.3f)\n", finalPos(1), finalPos(2));
-    fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
-    fprintf("\n");
-end
-%}
+fprintf("Number of paths planned: %d\n", pathPlans);
 end
 
 
