@@ -1,6 +1,6 @@
 function path = astartest(botSim, xnum, ynum, start, target)
 
-    discreteMap = discretize(botSim, xnum, ynum);
+    discreteMap = DiscreteMap(botSim, xnum, ynum);
   
     %% algorithm
     %set the starting and target positions

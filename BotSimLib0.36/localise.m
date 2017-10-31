@@ -148,7 +148,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
         actualAng = mod(botSim.getBotAng(0),2*pi);
-        xError = abs((1) - actualPos(1));
+        xError = abs(posPrediction(1) - actualPos(1));
         yError = abs(posPrediction(2) - actualPos(2));
         angError = abs(angPrediction - actualAng);
         
