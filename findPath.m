@@ -1,7 +1,6 @@
-function path = astartest(botSim, xnum, ynum, start, target)
+function path = findPath(botSim, discreteMap, start, target)
+ 
 
-    discreteMap = DiscreteMap(botSim, xnum, ynum);
-  
     %% algorithm
     %set the starting and target positions
     startPos = start;
@@ -9,7 +8,6 @@ function path = astartest(botSim, xnum, ynum, start, target)
     %fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
     %fprintf("target position: (%.1f,%.1f)\n", targetPos(1), targetPos(2));
    
-
     %find the closest nodes to the start and target positions
     startNode = discreteMap.findClosestNode(startPos);
     targetNode = discreteMap.findClosestNode(targetPos);

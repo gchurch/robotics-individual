@@ -229,8 +229,10 @@ if botSim.debug()
     botSim.drawBot(30,'r'); %draw robot with line length 30 and green
 end
 
+%get discretized version of the map
+discreteMap = DiscreteMap(botSim, xnum, ynum);
 %perform A* search and get the path to follow
-path = astartest(botSim, xnum, ynum, posPrediction, target);
+path = findPath(botSim, discreteMap, posPrediction, target);
 %make the bot follow the given path
 followPath(botSim, posPrediction, angPrediction, path, target);
 
@@ -251,6 +253,10 @@ if botSim.debug()
 end
 
 end
+
+
+
+%% helpler functions
 
 function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, targetPos)
     newAngle = calculateAngle(startPos,targetPos);
