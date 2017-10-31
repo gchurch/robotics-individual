@@ -1,79 +1,9 @@
 function path = astartest(botSim, xnum, ynum, start, target)
 
-    %% define map
-    map=botSim.getMap();  %default map
-
-    %% discretization
-    t = cputime;
- 
-    %the min and max axis values
-    xstart = map(1,1);
-    xend = map(1,1);
-    ystart = map(1,2);
-    yend = map(1,2);
-
-    dim = size(map);
-    for i=1:dim(1)
-        if map(i,1) < xstart
-            xstart = map(i,1);
-        end
-        if map(i,1) > xend
-            xend = map(i,1);
-        end
-        if map(i,2) < ystart
-            ystart = map(i,2);
-        end
-        if map(i,2) > yend
-            yend = map(i,2);
-        end
-    end
-
-    %the real distance between each node
-    xstep = (xend - xstart) / xnum;
-    ystep = (yend - ystart) / ynum;
-
-    %array of objects holding information for each node
-    nodes(xnum,ynum) = Node;
-    %getting map coordinates and determining if coordinate is inside the map
-    for i=1:xnum
-        for j=1:ynum
-            % we subtract 0.5 so that we reside in the middle of the squares
-            x = xstart + (i-0.5) * xstep;
-            y = ystart + (j-0.5) * ystep;
-            % set node pos property
-            pos = [x,y];
-            nodes(i,j).pos = pos;
-            % set node index property
-            index = [i,j];
-            nodes(i,j).index = index;
-            %set node inmap property
-            if botSim.pointInsideMap(pos)
-                nodes(i,j).inmap = 1;
-            else
-                nodes(i,j).inmap = 0;
-            end
-        end
-    end
-
-    e = cputime - t;
-    if botSim.debug()
-        fprintf("discretization time: %f\n", e);
-    end
-
-    %{
-    %print inmap info
-    for i=xnum:-1:1
-        for j=1:ynum
-            fprintf("%d ", nodes(j,i).inmap);
-        end
-        fprintf("\n");
-    end
-    %}
-
+    discreteMap = discretize(botSim, xnum, ynum);
+  
     %% algorithm
     %set the starting and target positions
-    width = xend - xstart;
-    height = yend - ystart;
     startPos = start;
     targetPos = target;
     %fprintf("start position: (%.1f,%.1f)\n", startPos(1), startPos(2));
@@ -81,19 +11,21 @@ function path = astartest(botSim, xnum, ynum, start, target)
    
 
     %find the closest nodes to the start and target positions
-    startNode = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, startPos);
-    targetNode = findClosestNode(xnum, ynum, xstart,xstep, ystart, ystep, targetPos);
-    startNodePos = nodes(startNode(1), startNode(2)).pos;
-    targetNodePos = nodes(targetNode(1), targetNode(2)).pos;
+    startNode = discreteMap.findClosestNode(startPos);
+    targetNode = discreteMap.findClosestNode(targetPos);
+    %find the actual coordinates associated with those nodes
+    startNodePos = discreteMap.nodes(startNode(1), startNode(2)).pos;
+    targetNodePos = discreteMap.nodes(targetNode(1), targetNode(2)).pos;
+    %if in debug mode then print information
     if botSim.debug()
         fprintf("start node: (%d,%d)\n", startNode(1), startNode(2));
         fprintf("start node pos: (%.1f, %.1f)\n", startNodePos(1), startNodePos(2));
         fprintf("target node: (%d,%d)\n", targetNode(1), targetNode(2));
         fprintf("target node pos: (%.1f, %.1f)\n", targetNodePos(1), targetNodePos(2));
     end
-    %run the A* search algorithm to find the best path from the start node to
-    %the target node
-    path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode);
+    
+    %run the A* search algorithm to find the best path from the start node to the target node
+    path = astarSearch(botSim, discreteMap, startNode, targetNode);
 
     %% draw map, bot, and path
     dims = size(path);
@@ -105,13 +37,13 @@ end
 
 %% functions
 %Performs A* search on the graph nodes from startNode to targetNode
-function path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode)
+function path = astarSearch(botSim, discreteMap, startNode, targetNode)
     t = cputime;
 
     %calculate all node heuristic values
-    for i=1:xnum
-        for j=1:ynum
-            nodes(i,j).calculateHeuristic(targetNode);
+    for i=1:discreteMap.xnum
+        for j=1:discreteMap.ynum
+            discreteMap.nodes(i,j).calculateHeuristic(targetNode);
         end
     end
     
@@ -127,7 +59,7 @@ function path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode)
     while ~(currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2))
         its = its + 1;
         % get new nodes
-        n = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode);
+        n = newNodeCosts(closedList, openList, discreteMap, currentNode);
         ndim = size(n);
 
         % add the nodes to the open list
@@ -144,7 +76,7 @@ function path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode)
     end
     
     % the path that the algorithm finds
-    path = constructPath(nodes, closedList);
+    path = constructPath(discreteMap.nodes, closedList);
     finalNode = path(end,:);
     
     e = cputime - t;
@@ -157,7 +89,7 @@ function path = astarSearch(botSim, xnum, ynum, nodes, startNode, targetNode)
 end
 
 % Return new nodes along with their corresponding cost
-function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, currentNode)
+function newNodes = newNodeCosts(closedList, openList, discreteMap, currentNode)
     newNodes = [];
     %iterate through all neighbouring nodes
     for i=-1:1
@@ -169,9 +101,9 @@ function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, curren
             %check that the node is not in the closed list
             if ~(i == 0 && j == 0) && ~inClosedList(closedList, newIndex)
                 %check that the node indexes are in bounds
-                if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) <= xnum && newIndex(2) <= ynum
+                if newIndex(1) > 0 && newIndex(2) > 0 && newIndex(1) <= discreteMap.xnum && newIndex(2) <= discreteMap.ynum
                     %check that the node is in the map
-                    if nodes(newIndex(1),newIndex(2)).inmap
+                    if discreteMap.nodes(newIndex(1),newIndex(2)).inmap
                         %calculate the g cost
                         if sum(abs(offset)) == 2
                             g = currentNode(3) + 14;
@@ -179,7 +111,7 @@ function newNodes = newNodeCosts(closedList, openList, nodes, xnum, ynum, curren
                             g = currentNode(3) + 10;
                         end
                         %f = g + h
-                        f = g + nodes(newIndex(1),newIndex(2)).h;
+                        f = g + discreteMap.nodes(newIndex(1),newIndex(2)).h;
                         %add node the list of new nodes
                         newEntry = [(index + [i,j]) g f];
                         newNodes = [newNodes; newEntry];
@@ -246,24 +178,4 @@ function path = constructPath(nodes, closedPath)
             end
         end
     end
-end
-
-function indexes = findClosestNode(xnum, ynum, xstart, xstep, ystart, ystep, pos)
-    xrelative = pos(1) - xstart + (xstep / 2);
-    yrelative = pos(2) - ystart + (ystep / 2);
-    closesti = round(xrelative / xstep);
-    closestj = round(yrelative / ystep);
-    if closesti <= 0
-        closesti = 1;
-    end
-    if closesti > xnum
-        closesti = xnum;
-    end
-    if closestj <= 0
-        closestj = 1;
-    end
-    if closestj > ynum
-        closestj = ynum;
-    end
-    indexes = [closesti, closestj];
 end

@@ -14,7 +14,7 @@ end
 scanSamples = 12;
 numOfParticles = 300;
 randomRespawnProportion = 0.2;
-maxNumOfIterations = 15;
+maxNumOfIterations = 5;
 sensorSigma = 1;
 sensorNoise = 1;
 motionNoise = 0.001;
@@ -59,18 +59,17 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
-    if n <= 5
-        % here they just turn in circles as an example
-        turn = 0.5;
-        move = 2;
-        botSim.turn(turn); %turn the real robot.  
-        botSim.move(move); %move the real robot. These movements are recorded for marking 
-        for i =1:numOfParticles %for all the particles. 
-            particles(i).turn(turn); %turn the particle in the same way as the real robot
-            particles(i).move(move); %move the particle in the same way as the real robot
-        end
+    % here they just turn in circles as an example
+    turn = 0.5;
+    move = 2;
+    botSim.turn(turn); %turn the real robot.  
+    botSim.move(move); %move the real robot. These movements are recorded for marking 
+    for i =1:numOfParticles %for all the particles. 
+        particles(i).turn(turn); %turn the particle in the same way as the real robot
+        particles(i).move(move); %move the particle in the same way as the real robot
     end
     %% Write code to check for convergence
+    %{
     if n == 6
         %perform A* search and get the path to follow
         path = astartest(botSim, xnum, ynum, posPrediction, target);
@@ -88,7 +87,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             converged = 1;
         end
     end
-    
+    %}
     %% Write code for updating your particles scans
     botScan = botSim.ultraScan()'; %get a scan from the real robot.
     
@@ -208,7 +207,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             %set the particles' new pose with some error (need to set ang aswell at some point
             for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
                 particlesUsed = particlesUsed + 1;
-                particles(j).setBotPos([particlePos(1) + randn * motionNoise, particlePos(2) + randn * motionNoise]);
+                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
             end
         end
     end
@@ -222,7 +221,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-%{
+
 if botSim.debug()
     hold off
     botSim.drawMap();
@@ -250,7 +249,7 @@ if botSim.debug()
     fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
     fprintf("\n");
 end
-%}
+
 end
 
 function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, targetPos)
@@ -276,9 +275,16 @@ function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
     for i=1:dims(1)
         %get the next target from the path
         target = path(i,:);
-        [newPos,newAng] = moveToPos(botSim, start, angle, target);
-        start = newPos;
-        angle = newAng;
+        % turning the bot towards the target
+        newAngle = calculateAngle(start, target);
+        turnAngle = newAngle - angle;
+        botSim.turn(turnAngle);
+        angle = newAngle;
+        % moving the bot to the target
+        dist = pdist2(start, target);
+        botSim.move(dist);
+        %the target is the new start node in the next iteration
+        start = target;
         if botSim.debug()
             botSim.drawBot(30,'g'); %draw robot with line length 30 and green
         end
