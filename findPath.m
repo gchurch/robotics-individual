@@ -26,12 +26,14 @@ function path = findPath(botSim, discreteMap, start, target)
     path = astarSearch(botSim, discreteMap, startNode, targetNode);
 
     %% draw map, bot, and path
-    dims = size(path);
-    for i=1:dims(1)
-        nodeInfo = path(i,:);
-        node = [nodeInfo(1),nodeInfo(2)];
-        pos = discreteMap.nodes(node(1),node(2)).pos;
-        plot(pos(1),pos(2),'*');
+    if botSim.debug()
+        dims = size(path);
+        for i=1:dims(1)
+            nodeInfo = path(i,:);
+            node = [nodeInfo(1),nodeInfo(2)];
+            pos = discreteMap.nodes(node(1),node(2)).pos;
+            plot(pos(1),pos(2),'*');
+        end
     end
 end
 
@@ -67,6 +69,11 @@ function path = astarSearch(botSim, discreteMap, startNode, targetNode)
             openList = addToOpenList(openList, n(i,:));
         end
         %not sorting by column 3 properly
+        dimOpenList = size(openList);
+        if dimOpenList(1) == 0
+            path = [];
+            return;
+        end
         openList = sortrows(openList,[4,3],{'ascend','descend'});
     
         % get new current node

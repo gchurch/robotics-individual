@@ -109,6 +109,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %Check if we should plan a new path
         if ~(currentNode(1) == nodePrediction(1)) || ~(currentNode(2) == nodePrediction(2))
           path = findPath(botSim, discreteMap, posPrediction, target);
+          pathDim = size(path);
+          if pathDim(1) == 0
+              return;
+              fprintf("COULD NOT FIND A PATH!\n");
+          end
           pathPlans = pathPlans + 1;
           nodePrediction = currentNode;
           if botSim.debug()
