@@ -33,6 +33,10 @@ botSim.setScanConfig(botSim.generateScanConfig(scanSamples));
 
 %generate some random particles inside the map
 particles(numOfParticles,1) = BotSim; %how to set up a vector of objects
+
+%get discretized version of the map
+discreteMap = DiscreteMap(botSim, xnum, ynum);
+
 for i = 1:numOfParticles
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
@@ -229,12 +233,10 @@ if botSim.debug()
     botSim.drawBot(30,'r'); %draw robot with line length 30 and green
 end
 
-%get discretized version of the map
-discreteMap = DiscreteMap(botSim, xnum, ynum);
 %perform A* search and get the path to follow
 path = findPath(botSim, discreteMap, posPrediction, target);
 %make the bot follow the given path
-followPath(botSim, posPrediction, angPrediction, path, target);
+followPath(botSim, discreteMap, posPrediction, angPrediction, path, target);
 
 if botSim.debug()
     drawnow;
@@ -272,15 +274,16 @@ function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, ta
     end
 end
 
-function finalPos = followPath(botSim, startPos, startAng, path, targetPos)
-    path = [path;targetPos];
+function finalPos = followPath(botSim, discreteMap, startPos, startAng, path, targetPos)
     start = startPos;
     angle = startAng;
     newAngle = 0;
     dims = size(path);
     for i=1:dims(1)
+        targetInfo = path(i,:);
+        targetNode = [targetInfo(1),targetInfo(2)];
         %get the next target from the path
-        target = path(i,:);
+        target = discreteMap.nodes(targetNode(1), targetNode(2)).pos;
         % turning the bot towards the target
         newAngle = calculateAngle(start, target);
         turnAngle = newAngle - angle;

@@ -28,7 +28,9 @@ function path = findPath(botSim, discreteMap, start, target)
     %% draw map, bot, and path
     dims = size(path);
     for i=1:dims(1)
-        pos = path(i,:);
+        nodeInfo = path(i,:);
+        node = [nodeInfo(1),nodeInfo(2)];
+        pos = discreteMap.nodes(node(1),node(2)).pos;
         plot(pos(1),pos(2),'*');
     end
 end
@@ -160,7 +162,7 @@ function path = constructPath(nodes, closedPath)
     path = [];
     last = closedPath(end,:);
     pos = nodes(last(1),last(2)).pos;
-    path = [pos;path];
+    path = [last;path];
     dims = size(closedPath);
     for i=dims(1):-1:1
         row = closedPath(i,:);
@@ -169,8 +171,7 @@ function path = constructPath(nodes, closedPath)
                 for k=-1:1
                     if ~(j == 0 && k == 0) && (row(1) == last(1) + j) && (row(2) == last(2) + k)
                         last = row;
-                        pos = nodes(last(1),last(2)).pos;
-                        path = [pos;path];
+                        path = [last;path];
                     end
                 end
             end
