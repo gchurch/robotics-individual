@@ -13,7 +13,7 @@ end
 %variables
 scanSamples = 12;
 numOfParticles = 300;
-randomRespawnProportion = 0.5;
+randomRespawnProportion = 0.3;
 maxNumOfIterations = 300;
 sensorSigma = 1;
 sensorNoise = 1;
