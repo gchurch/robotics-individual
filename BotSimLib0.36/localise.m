@@ -69,7 +69,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
-    if n <= 5
+    if n <= 10
         % here they just turn in circles as an example
         turn = 0.5;
         move = 2;
