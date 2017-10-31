@@ -268,7 +268,9 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     end
    
 end
-fprintf("Number of paths planned: %d\n", pathPlans);
+if botSim.debug()
+    fprintf("Number of paths planned: %d\n", pathPlans);
+end
 end
 
 
