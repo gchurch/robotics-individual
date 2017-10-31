@@ -13,7 +13,7 @@ end
 %variables
 scanSamples = 12;
 numOfParticles = 300;
-randomRespawnProportion = 0.3;
+randomRespawnProportion = 0.4;
 maxNumOfIterations = 300;
 sensorSigma = 1;
 sensorNoise = 1;
@@ -43,9 +43,9 @@ for i = 1:numOfParticles
     particles(i) = BotSim(modifiedMap);  %each particle should use the same map as the botSim object
     particles(i).randomPose(0); %spawn the particles in random locations
     particles(i).setScanConfig(botSim.generateScanConfig(scanSamples));
-    particles(i).setMotionNoise(motionNoise);
-    particles(i).setTurningNoise(turnNoise);
-    particles(i).setSensorNoise(sensorNoise);
+   %particles(i).setMotionNoise(motionNoise);
+   %particles(i).setTurningNoise(turnNoise);
+   %particles(i).setSensorNoise(sensorNoise);
 end
 
 %How many particles will be respawned at a random location after each
@@ -73,7 +73,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
-    if n <= 10
+    if n <= 15
         % here they just turn in circles as an example
         turn = 0.5;
         move = 2;
@@ -262,8 +262,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             %set the particles' new pose with some error (need to set ang aswell at some point
             for j=(particlesUsed+1):(particlesUsed+particleResamples(i))
                 particlesUsed = particlesUsed + 1;
-                particles(j).setBotPos([particlePos(1) + randn, particlePos(2) + randn]);
-                particles(j).setBotAng(particleAng + randn * turnNoise);
+                particles(j).setBotPos([particlePos(1) + randn * 2, particlePos(2) + randn * 2]);
+                particles(j).setBotAng(particleAng + randn * 0.1);
             end
         end
     end
