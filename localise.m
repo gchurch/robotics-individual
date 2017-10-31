@@ -217,7 +217,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             particles(i).drawBot(3); %draw particle with line length 3 and default color
         end
         particles(idx).drawBot(30,'r');
-        plot(target(1),target(2),"*");
         drawnow;
     end
     
