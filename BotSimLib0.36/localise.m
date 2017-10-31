@@ -60,7 +60,11 @@ angPrediction = 0;
 currentPath = [];
 nodePrediction = [0,0];
 
+%The number of times that path planning is performed
 pathPlans = 0;
+
+%the positions that are visited on the bots journey
+waypoints = [];
 
 %% Localisation code
 n = 0;
@@ -179,7 +183,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     [val,idx] = max(weights);
     posPrediction = particles(idx).getBotPos();
     angPrediction = mod(particles(idx).getBotAng(),2*pi);
-    
+    waypoints = [waypoints posPrediction'];
     
     %% Drawing
     %only draw if you are in debug mode or it will be slow during marking
@@ -272,6 +276,8 @@ end
 if botSim.debug()
     fprintf("Number of paths planned: %d\n", pathPlans);
 end
+disp("way points:");
+disp(waypoints);
 end
 
 
