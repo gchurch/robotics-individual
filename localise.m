@@ -34,9 +34,6 @@ botSim.setScanConfig(botSim.generateScanConfig(scanSamples));
 %generate some random particles inside the map
 particles(numOfParticles,1) = BotSim; %how to set up a vector of objects
 
-%the current path that we are following
-path = [];
-
 %get discretized version of the map
 discreteMap = DiscreteMap(botSim, xnum, ynum);
 targetNode = discreteMap.findClosestNode(target);
@@ -60,7 +57,7 @@ posPrediction = [];
 angPrediction = 0;
 
 %current path
-currentPath = [];
+path = [];
 
 %the predicted node that the bot is at
 nodePrediction = [0,0];
