@@ -108,6 +108,9 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         
         %Check if we should plan a new path
         if ~(currentNode(1) == nodePrediction(1)) || ~(currentNode(2) == nodePrediction(2))
+          if botSim.debug()
+              fprintf("CALCULATING NEW PATH!!\n");
+          end
           path = findPath(botSim, discreteMap, posPrediction, target);
           pathDim = size(path);
           if pathDim(1) == 0
@@ -116,9 +119,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
           end
           pathPlans = pathPlans + 1;
           nodePrediction = currentNode;
-          if botSim.debug()
-              fprintf("CALCULATED NEW PATH!!\n");
-          end
         end
         
         pathDim = size(path);
@@ -199,14 +199,13 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %getting the actual and predicted bot pose
         actualPos = botSim.getBotPos(0);
         actualAng = mod(botSim.getBotAng(0),2*pi);
-        xError = abs(posPrediction(1) - actualPos(1));
-        yError = abs(posPrediction(2) - actualPos(2));
+        posError = pdist2(posPrediction, actualPos);
         angError = abs(angPrediction - actualAng);
         
         %print actual and predicted position
         fprintf("Actual position:\t(%.3f, %.3f)\n", actualPos(1), actualPos(2));
         fprintf("Predicted position:\t(%.3f, %.3f)\n", posPrediction(1), posPrediction(2));
-        fprintf("Position error: \t(%.3f, %.3f)\n", xError, yError);
+        fprintf("Position error: \t%.3f\n", posError);
         fprintf("\n");
         
         %print actual and predicted angle

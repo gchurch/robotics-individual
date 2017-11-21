@@ -91,7 +91,7 @@ function path = astarSearch(botSim, discreteMap, startNode, targetNode)
     if botSim.debug()
         fprintf("path length: %d\n", closedList(end,4));
         fprintf("iterations: %d\n", its);
-        fprintf("A* search algorithm time: %f\n", e);
+        fprintf("A* search algorithm time: %f\n\n", e);
     end
 end
 
