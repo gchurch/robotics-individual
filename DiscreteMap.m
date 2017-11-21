@@ -23,6 +23,7 @@ classdef DiscreteMap < handle
             end
         end
         
+        %turn our map into a grid
         function discretize(obj, botSim)
             
             %% discretization
@@ -94,6 +95,7 @@ classdef DiscreteMap < handle
             %}
         end
         
+        %find the closest node in the map to a given position
         function indexes = findClosestNode(obj, pos)
             xrelative = pos(1) - obj.xstart + (obj.xstep / 2);
             yrelative = pos(2) - obj.ystart + (obj.ystep / 2);
@@ -114,6 +116,7 @@ classdef DiscreteMap < handle
             indexes = [closesti, closestj];
         end
         
+        %add configuration space to the map
         function padding(obj)
              newNodes(obj.xnum,obj.ynum) = Node;
              for i=1:obj.xnum

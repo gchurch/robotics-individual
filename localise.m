@@ -56,8 +56,10 @@ numberOfRandomRespawns = randomRespawnProportion * numOfParticles;
 posPrediction = [];
 angPrediction = 0;
 
-%path planning info
+%current path
 currentPath = [];
+
+%the predicted node that the bot is at
 nodePrediction = [0,0];
 
 %The number of times that path planning is performed
@@ -73,6 +75,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
     n = n+1; %increment the current number of iterations
     
     %% Write code to decide how to move next
+    %turn in a circle to localise
     if n <= 15
         % here they just turn in circles as an example
         turn = 0.5;
@@ -89,15 +92,6 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %The node that we are at according to our position prediction
         currentNode = discreteMap.findClosestNode(posPrediction);
         
-        %print node values
-        %{
-        if botSim.debug()
-            fprintf("currentNode: (%d,%d)\n", currentNode(1), currentNode(2));
-            fprintf("predictedNode: (%d,%d)\n", nodePrediction(1), nodePrediction(2));
-            fprintf("targetNode: (%d,%d)\n", targetNode(1), targetNode(2));
-        end
-        %}
-        
         %If you are located in the final node then move to the final target position
         if currentNode(1) == targetNode(1) && currentNode(2) == targetNode(2)
             [newPos, newAng] = moveToPos(botSim, particles, posPrediction, angPrediction, target);
@@ -106,7 +100,8 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
             converged = 1;
         end
         
-        %Check if we should plan a new path
+        %If our current node is not the same as the predicted node then
+        %replan the path
         if ~(currentNode(1) == nodePrediction(1)) || ~(currentNode(2) == nodePrediction(2))
           if botSim.debug()
               fprintf("CALCULATING NEW PATH!!\n");
@@ -118,9 +113,11 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
               fprintf("COULD NOT FIND A PATH!\n");
           end
           pathPlans = pathPlans + 1;
+          %update node prediction
           nodePrediction = currentNode;
         end
         
+        %moving to next position and updating info
         pathDim = size(path);
         if pathDim(1) > 0
         
@@ -287,6 +284,7 @@ end
 
 %% helpler functions
 
+%make the robot move to a position given its predicted pose
 function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, targetPos)
     newAngle = calculateAngle(startPos,targetPos);
     turnAngle = newAngle - startAng;
@@ -301,6 +299,7 @@ function [newPos,newAngle] = moveToPos(botSim, particles, startPos, startAng, ta
     end
 end
 
+%make the robot follow a given path
 function finalPos = followPath(botSim, discreteMap, startPos, startAng, path, targetPos)
     start = startPos;
     angle = startAng;
@@ -328,6 +327,7 @@ function finalPos = followPath(botSim, discreteMap, startPos, startAng, path, ta
     finalPos = start;
 end
 
+%calculate the angle between a start and target angle
 function angle = calculateAngle(start, target)
     diff = target - start;
     alpha = atan(diff(2)/diff(1));

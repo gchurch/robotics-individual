@@ -165,14 +165,15 @@ function newOpenList = addToOpenList(openList, newEntry)
     end
 end
 
-function path = constructPath(nodes, closedPath)
+%construct the path that we followed given the closed list
+function path = constructPath(nodes, closedList)
     path = [];
-    last = closedPath(end,:);
+    last = closedList(end,:);
     pos = nodes(last(1),last(2)).pos;
     path = [last;path];
-    dims = size(closedPath);
+    dims = size(closedList);
     for i=dims(1):-1:1
-        row = closedPath(i,:);
+        row = closedList(i,:);
         if (row(3) == (last(3) - 10)) || (row(3) == (last(3) - 14))
             for j=-1:1
                 for k=-1:1
