@@ -1,3 +1,5 @@
+addpath("BotSimLib0.36");
+
 clf;        %clears figures
 clc;        %clears console
 clear;      %clears workspace

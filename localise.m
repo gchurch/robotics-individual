@@ -218,7 +218,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         plot([target(1)-2,target(1)+2],[target(2)-2,target(2)+2],'lineWidth',1,'Color','black');
         plot([target(1)-2,target(1)+2],[target(2)+2,target(2)-2],'lineWidth',1,'Color','black');
         
-        %draw the robot with line length 30 and green
+        %draw the robot with line length 5 and green
         botSim.drawBot(5,'b');
         
         %{
@@ -229,7 +229,7 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         %}
         
         %draw the best guess particle
-        particles(idx).drawBot(5,'g');
+        particles(idx).drawBot(5,'r');
         drawnow;
     end
     
