@@ -213,11 +213,23 @@ while(converged == 0 && n < maxNumOfIterations) %%particle filter loop
         
         hold off; %the drawMap() function will clear the drawing when hold is off
         botSim.drawMap(); %drawMap() turns hold back on again, so you can draw the bots
-        botSim.drawBot(30,'g'); %draw robot with line length 30 and green
+        
+        %drawing the target position
+        plot([target(1)-2,target(1)+2],[target(2)-2,target(2)+2],'lineWidth',1,'Color','black');
+        plot([target(1)-2,target(1)+2],[target(2)+2,target(2)-2],'lineWidth',1,'Color','black');
+        
+        %draw the robot with line length 30 and green
+        botSim.drawBot(5,'b');
+        
+        %{
+        %draw the particles
         for i =1:numOfParticles
-            particles(i).drawBot(3); %draw particle with line length 3 and default color
+            particles(i).drawBot(3);
         end
-        particles(idx).drawBot(30,'r');
+        %}
+        
+        %draw the best guess particle
+        particles(idx).drawBot(5,'g');
         drawnow;
     end
     
